@@ -30,7 +30,7 @@
 TEXT_BASE ?= 0x40300000
 OMAP3_TEXT_BASE ?= 0x40200000
 
-TOOLCHAIN ?= arm-eabi-
+TOOLCHAIN ?= arm-none-linux-gnueabi-
 
 TARGET_CC := $(TOOLCHAIN)gcc
 TARGET_LD := $(TOOLCHAIN)ld
