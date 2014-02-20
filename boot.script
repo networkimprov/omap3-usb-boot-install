@@ -1,0 +1,43 @@
+echo Erasing old u-boot environment
+nandecc hw
+nand erase 240000 100000
+
+echo Flashing MLO to NAND
+nandecc hw
+nand erase 0 80000
+nand write 80088000 0 20000
+nand write 80088000 20000 20000
+nand write 80088000 40000 20000
+nand write 80088000 60000 20000
+
+echo Flashing u-boot to NAND
+nandecc hw
+nand erase 80000 80000
+nand write 80108000 80000 80000
+
+echo Flashing DTB to NAND
+nandecc sw
+nand erase 380000 200000
+nand write 80208000 380000 200000
+
+echo Flashing kernel to NAND
+nandecc sw
+nand erase 580000 800000
+nand write 80408000 580000 800000
+
+echo Flashing initramfs to NAND
+nandecc sw
+nand erase d80000 1400000
+nand write 80c08000 d80000 1400000
+
+echo Resetting install script header in memory
+mw 80188000 0 8
+
+echo Loading kernel, DTB and initramfs
+setenv bootargs root=/dev/ram0 console=ttyO2,115200 really_install debug earlyprintk
+nand read 82000000 580000 800000
+nand read 82800000 380000 200000
+fdt addr 82800000
+fdt resize
+nand read 83000000 d80000 1400000
+bootz 82000000 83000000:1400000 82800000

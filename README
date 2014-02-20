@@ -1,0 +1,21 @@
+Script to generate an install image and flash it over USB.
+
+The install steps are roughly:
+
+1. Create a single install image of u-boot, kernel and initramfs
+
+2. Load the install image over USB
+
+3. Start u-boot and flash u-boot, kernel and initramfs
+
+4. Start kernel and configure USB composite gadget in serial,
+   Ethernet and mass storage mode with eMMC as the mass storage
+   back end. The serial console shows up as /dev/ttyACM0 on the
+   host PC.
+
+5. Once the red and green LEDs start cycling, the eMMC can be
+   formatted an initialized over USB mass storage from the host PC.
+
+Note that the NAND partitions must match with u-boot and kernel
+.dts file.
+
