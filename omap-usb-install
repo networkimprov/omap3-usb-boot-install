@@ -36,52 +36,52 @@ run)
   case "$2" in 32|64) ;; *) echo "ERROR: specify 32 or 64"; exit 0 ;; esac
 
   if ! sudo src/omap34usbboot/out/usbboot$2 src/omap34usbboot/out/omap3_aboot install-image; then
-	  echo "ERROR: failed to flash install-image"
-	  exit 4
+    echo "ERROR: failed to flash install-image"
+    exit 4
   fi
 ;;
 
 make)
   pad_image() {
-	  file="$1"
-	  pad_size="$2"
+    file="$1"
+    pad_size="$2"
 
-	  if [ ! -f $file ]; then
-		  echo "Creating empty $file"
-		  touch $file
-	  fi
+    if [ ! -f $file ]; then
+      echo "Creating empty $file"
+      touch $file
+    fi
 
-	  size=$(du -b "$file" | cut -f 1)
-	  if [ $size -gt $pad_size ]; then
-		  echo "ERROR: $file too big"
-		  exit 2
-	  fi
+    size=$(du -b "$file" | cut -f 1)
+    if [ $size -gt $pad_size ]; then
+      echo "ERROR: $file too big"
+      exit 2
+    fi
 
-	  if [ $size -lt $pad_size ]; then
-		  echo "Padding $file from $size to $pad_size"
-		  if ! truncate -s $pad_size $file; then
-			  echo "ERROR: truncate failed for $file"
-			  exit 3
-		  fi
-	  fi
+    if [ $size -lt $pad_size ]; then
+      echo "Padding $file from $size to $pad_size"
+      if ! truncate -s $pad_size $file; then
+        echo "ERROR: truncate failed for $file"
+        exit 3
+      fi
+    fi
   }
 
   if ! mkimage -A arm -T script -C none -n "Install script" -d boot.script boot.scr; then
-	  echo "ERRROR: could not mkimage install script"
-	  exit 1
+    echo "ERRROR: could not mkimage install script"
+    exit 1
   fi
 
-  pad_image u-boot.bin $SZ_512K		# at 0x80008000
-  pad_image MLO $SZ_512K			# at 0x80088000
-  pad_image u-boot.img $SZ_512K		# at 0x80108000
-  pad_image boot.scr $SZ_512K		# at 0x80188000
-  pad_image dtb $SZ_2M			# at 0x80208000
-  pad_image zimage $SZ_8M			# at 0x80408000
-  pad_image initramfs $SZ_20M		# at 0x80c08000
+  pad_image u-boot.bin $SZ_512K    # at 0x80008000
+  pad_image MLO $SZ_512K           # at 0x80088000
+  pad_image u-boot.img $SZ_512K    # at 0x80108000
+  pad_image boot.scr $SZ_512K      # at 0x80188000
+  pad_image dtb $SZ_2M             # at 0x80208000
+  pad_image zimage $SZ_8M          # at 0x80408000
+  pad_image initramfs $SZ_20M      # at 0x80c08000
 
   if ! cat u-boot.bin MLO u-boot.img boot.scr dtb zimage initramfs > install-image; then
-	  echo "ERROR: failed to create install image"
-	  exit 3
+    echo "ERROR: failed to create install image"
+    exit 3
   fi
 ;;
 
