@@ -69,7 +69,7 @@ while [ $# -gt 0 ]; do
 done
 
 cold_flash() {
-  if [ -f src/omap34usbboot/out/usboot ]; then
+  if [ -f src/omap34usbboot/out/usbboot ]; then
     prefix=src/omap34usbboot/out
   else
     arch=$(uname -m)
