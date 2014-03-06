@@ -144,6 +144,8 @@ int usb_boot(usb_handle *usb,
 	usb_write(usb, data, sz);
 
 	if (data2) {
+		char dieid[64];
+
 		fprintf(stderr,"waiting for 2ndstage response...\n");
 		usb_read(usb, &msg_size, sizeof(msg_size));
 		if (msg_size != 0xaabbccdd) {
@@ -154,6 +156,9 @@ int usb_boot(usb_handle *usb,
 		fprintf(stderr,"sending image to target...\n");
 		usb_write(usb, &msg_size, sizeof(msg_size));
 		usb_write(usb, data2, sz2);
+
+		usb_read(usb, dieid, sizeof(dieid));
+		fprintf(stderr, "dieid: %s\n", dieid);
 	}
 	
 	return 0;
