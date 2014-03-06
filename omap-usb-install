@@ -25,23 +25,75 @@ SZ_2M=2097152
 SZ_8M=8388608
 SZ_20M=20971520
 
+print_options() {
+  echo "usage: $0 [-u | --update] [-irootfs.tar.gz | --install=rootfs.tar.gz]"
+}
+
 if [ $# -lt 1 ]; then
-  echo "usage: $0 [make | run [32 | 64]]"
-  exit 0
+  print_options
 fi
 
-case "$1" in
+if ! options=$(getopt -o ui:: -l update,install:: -- "$@"); then
+  print_options
+  exit 1
+fi
 
-run)
-  case "$2" in 32|64) ;; *) echo "ERROR: specify 32 or 64"; exit 0 ;; esac
+set -- $options
+update=0
+install=0
 
-  if ! sudo src/omap34usbboot/out/usbboot$2 src/omap34usbboot/out/omap3_aboot install-image; then
+while [ $# -gt 0 ]; do
+  case $1 in
+  -u|--update)
+  update=1
+  ;;
+  -i|--install)
+  file=$2
+  install=1
+  shift
+  ;;
+  (--)
+  shift
+  break
+  ;;
+  (-*)
+  echo "Unknown option $1"
+  exit 1
+  ;;
+  *)
+  print_options
+  exit 1
+  ;;
+  esac
+  shift
+done
+
+cold_flash() {
+  if [ -f src/omap34usbboot/out/usboot ]; then
+    prefix=src/omap34usbboot/out
+  else
+    arch=$(uname -m)
+    case "$arch" in
+    i?86)
+      prefix=arch/i386
+    ;;
+    x86_64)
+      prefix=arch/x86_64
+    ;;
+    *)
+      echo "Unsupported architecture, please build src/omap34usbboot manually"
+      exit 2
+    ;;
+    esac
+  fi
+
+  if ! sudo $prefix/usbboot$2 $prefix/omap3_aboot install-image; then
     echo "ERROR: failed to flash install-image"
     exit 4
   fi
-;;
+}
 
-make)
+update() {
   pad_image() {
     file="$1"
     pad_size="$2"
@@ -83,11 +135,14 @@ make)
     echo "ERROR: failed to create install image"
     exit 3
   fi
-;;
+}
 
-*)
-  echo "ERROR: $1 is not a command"
-;;
+if [ "$update" == "1" ]; then
+  echo "Update cold flash images..."
+  update
+fi
 
-esac
-
+if [ "$install" == "1" ]; then
+  echo "Cold flashing over USB..."
+  cold_flash
+fi
