@@ -61,10 +61,9 @@ void aboot(void)
 	if (usb_open(&usb))
 		goto fail;
 
-	usb_queue_read(&usb, &len, sizeof(len));
 	usb_write(&usb, &MSG, sizeof(MSG));
-	n = usb_wait_read(&usb);
-	if (n)
+
+	if (usb_read(&usb, &len, sizeof(len)))
 		goto fail;
 
 	if (usb_read(&usb, (void*) DOWNLOAD_ADDR, len))
