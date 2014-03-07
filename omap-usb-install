@@ -41,6 +41,7 @@ fi
 set -- $options
 update=0
 install=0
+dieid=""
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -87,10 +88,26 @@ cold_flash() {
     esac
   fi
 
-  if ! sudo $prefix/usbboot$2 $prefix/omap3_aboot install-image; then
-    echo "ERROR: failed to flash install-image"
-    exit 4
+  while read -r output; do
+    echo $output
+    if echo $output | grep "No such file or directory" > /dev/null; then
+      exit 4
+    fi 
+    if echo $output | grep "command not found" > /dev/null; then
+      exit 5
+    fi 
+    if echo $output | grep "unexpected 2ndstage response" > /dev/null; then
+      exit 6
+    fi 
+    dieid=$(echo $output | awk '/dieid:[[:space:]]/ { split($0,a,"dieid: "); print substr(a[2], 1, 32) }')
+  done < <(sudo $prefix/usbboot $prefix/omap3_aboot install-image 2>&1)
+
+  if [ "$dieid" = "" ]; then
+    echo "ERROR: failed to get dieid"
+    exit 7
   fi
+
+  return 0
 }
 
 update() {
@@ -135,6 +152,29 @@ update() {
     echo "ERROR: failed to create install image"
     exit 3
   fi
+
+  return 0
+}
+
+install_on_emmc() {
+  emmc=$1
+  timeout=45
+  echo "Waiting for mass storage device $emmc"
+  while [ 1 ]; do
+    if [ -b $emmc ]; then
+      break
+    fi
+    ((timeout--))
+    if [ "$timeout" -lt "1" ]; then
+      echo "ERROR: Timed out waiting for $emmc"
+      exit 8
+    fi
+    sleep 1
+  done
+
+  echo "Found mass storage at $emmc"
+
+  return 0
 }
 
 if [ "$update" == "1" ]; then
@@ -145,4 +185,13 @@ fi
 if [ "$install" == "1" ]; then
   echo "Cold flashing over USB..."
   cold_flash
+fi
+
+if [ "$install" == "1" ] && [ "$dieid" != "" ]; then
+  disk_prefix="/dev/disk/by-id/usb-Linux_File-Stor_Gadget_"
+  disk_postfix="-0:0"
+  disk=$disk_prefix$dieid$disk_postfix
+  if install_on_emmc $disk; then
+    exit 0
+  fi
 fi
