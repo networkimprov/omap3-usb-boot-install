@@ -99,7 +99,7 @@ cold_flash() {
     if echo $output | grep "unexpected 2ndstage response" > /dev/null; then
       exit 6
     fi 
-    dieid=$(echo $output | awk '/dieid:[[:space:]]/ { split($0,a,"dieid: "); print substr(a[2], 1, 32) }')
+    dieid=$(echo $output | awk '{ split($0,a,"dieid: "); print substr(a[2], 1, 32) }')
   done < <(sudo $prefix/usbboot $prefix/omap3_aboot install-image 2>&1)
 
   if [ "$dieid" = "" ]; then
