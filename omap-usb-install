@@ -25,49 +25,52 @@ SZ_2M=2097152
 SZ_8M=8388608
 SZ_20M=20971520
 
-print_options() {
-  echo "usage: $0 [-u | --update] [-irootfs.tar.gz | --install=rootfs.tar.gz]"
-}
-
-if [ $# -lt 1 ]; then
-  print_options
-fi
-
-if ! options=$(getopt -o ui:: -l update,install:: -- "$@"); then
-  print_options
-  exit 1
-fi
-
-set -- $options
 update=0
 install=0
 dieid=""
 
-while [ $# -gt 0 ]; do
-  case $1 in
-  -u|--update)
-  update=1
-  ;;
-  -i|--install)
-  file=$2
-  install=1
-  shift
-  ;;
-  (--)
-  shift
-  break
-  ;;
-  (-*)
-  echo "Unknown option $1"
-  exit 1
-  ;;
-  *)
-  print_options
-  exit 1
-  ;;
-  esac
-  shift
-done
+print_options() {
+  echo "usage: $0 [-u | --update] [-irootfs.tar.gz | --install=rootfs.tar.gz]"
+}
+
+check_options() {
+  if [ $# -lt 1 ]; then
+    print_options
+  fi
+
+  if ! options=$(getopt -o ui:: -l update,install:: -- "$@"); then
+    print_options
+    exit 1
+  fi
+
+  set -- $options
+
+  while [ $# -gt 0 ]; do
+    case $1 in
+    -u|--update)
+    update=1
+    ;;
+    -i|--install)
+    rootfs_file=$2
+    install=1
+    shift
+    ;;
+    (--)
+    shift
+    break
+    ;;
+    (-*)
+    echo "Unknown option $1"
+    exit 2
+    ;;
+    *)
+    print_options
+    exit 3
+    ;;
+    esac
+    shift
+  done
+}
 
 cold_flash() {
   if [ -f src/omap34usbboot/out/usbboot ]; then
@@ -83,7 +86,7 @@ cold_flash() {
     ;;
     *)
       echo "Unsupported architecture, please build src/omap34usbboot manually"
-      exit 2
+      exit 1
     ;;
     esac
   fi
@@ -91,53 +94,54 @@ cold_flash() {
   while read -r output; do
     echo $output
     if echo $output | grep "No such file or directory" > /dev/null; then
-      exit 4
+      exit 2
     fi 
     if echo $output | grep "command not found" > /dev/null; then
-      exit 5
+      exit 3
     fi 
     if echo $output | grep "unexpected 2ndstage response" > /dev/null; then
-      exit 6
+      exit 4
     fi 
     dieid=$(echo $output | awk '{ split($0,a,"dieid: "); print substr(a[2], 1, 32) }')
   done < <(sudo $prefix/usbboot $prefix/omap3_aboot install-image 2>&1)
 
   if [ "$dieid" = "" ]; then
     echo "ERROR: failed to get dieid"
-    exit 7
+    exit 5
   fi
 
   return 0
 }
 
-update() {
-  pad_image() {
-    file="$1"
-    pad_size="$2"
+pad_image() {
+  file="$1"
+  pad_size="$2"
 
-    if [ ! -f $file ]; then
-      echo "Creating empty $file"
-      touch $file
-    fi
+  if [ ! -f $file ]; then
+    echo "Creating empty $file"
+    touch $file
+  fi
 
-    size=$(du -b "$file" | cut -f 1)
-    if [ $size -gt $pad_size ]; then
-      echo "ERROR: $file too big"
+  size=$(du -b "$file" | cut -f 1)
+  if [ $size -gt $pad_size ]; then
+    echo "ERROR: $file too big"
+    exit 1
+  fi
+
+  if [ $size -lt $pad_size ]; then
+    echo "Padding $file from $size to $pad_size"
+    if ! truncate -s $pad_size $file; then
+      echo "ERROR: truncate failed for $file"
       exit 2
     fi
+  fi
+}
 
-    if [ $size -lt $pad_size ]; then
-      echo "Padding $file from $size to $pad_size"
-      if ! truncate -s $pad_size $file; then
-        echo "ERROR: truncate failed for $file"
-        exit 3
-      fi
-    fi
-  }
+update_images() {
 
   if ! mkimage -A arm -T script -C none -n "Install script" -d boot.script boot.scr; then
     echo "ERRROR: could not mkimage install script"
-    exit 1
+    exit 3
   fi
 
   pad_image u-boot.bin $SZ_512K    # at 0x80008000
@@ -150,13 +154,13 @@ update() {
 
   if ! cat u-boot.bin MLO u-boot.img boot.scr dtb zimage initramfs > install-image; then
     echo "ERROR: failed to create install image"
-    exit 3
+    exit 4
   fi
 
   return 0
 }
 
-install_on_emmc() {
+wait_for_emmc() {
   emmc=$1
   timeout=45
   echo "Waiting for mass storage device $emmc"
@@ -167,7 +171,7 @@ install_on_emmc() {
     ((timeout--))
     if [ "$timeout" -lt "1" ]; then
       echo "ERROR: Timed out waiting for $emmc"
-      exit 8
+      exit 1
     fi
     sleep 1
   done
@@ -177,21 +181,40 @@ install_on_emmc() {
   return 0
 }
 
+#
+# Main program
+#
+
+check_options $@
+
 if [ "$update" == "1" ]; then
   echo "Update cold flash images..."
-  update
+  if ! update_images; then
+    echo "ERROR: Could not update images"
+    exit 2
+  fi
 fi
 
 if [ "$install" == "1" ]; then
   echo "Cold flashing over USB..."
-  cold_flash
+  if ! cold_flash; then
+    echo "ERROR: Could not cold flash"
+    exit 3
+  fi
 fi
 
 if [ "$install" == "1" ] && [ "$dieid" != "" ]; then
+
+  # Final check for the dieid length to be 32
+  if [ ${#dieid} != "32" ]; then
+    echo "ERROR: Bad dieid $dieid ${#dieid}"
+    exit 4
+  fi
+
   disk_prefix="/dev/disk/by-id/usb-Linux_File-Stor_Gadget_"
   disk_postfix="-0:0"
   disk=$disk_prefix$dieid$disk_postfix
-  if install_on_emmc $disk; then
-    exit 0
+  if ! wait_for_emmc $disk; then
+    exit 5
   fi
 fi
