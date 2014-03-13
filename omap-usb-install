@@ -31,12 +31,13 @@ dieid=""
 rootfs_file=""
 
 print_options() {
-  echo "usage: $0 [-u | --update] [-irootfs.tar.gz | --install=rootfs.tar.gz]"
+  echo "usage: $0 [-u | --update] [-i[rootfs.tar.gz] | --install[=rootfs.tar.gz]]"
 }
 
 check_options() {
   if [ $# -lt 1 ]; then
     print_options
+    #lb exit 0
   fi
 
   if ! options=$(getopt -o ui:: -l update,install:: -- "$@"); then
@@ -49,24 +50,24 @@ check_options() {
   while [ $# -gt 0 ]; do
     case $1 in
     -u|--update)
-    update=1
+      update=1
     ;;
     -i|--install)
-    rootfs_file=$2
-    install=1
-    shift
+      rootfs_file=$2
+      install=1
+      shift
     ;;
     (--)
-    shift
-    break
+      shift
+      break
     ;;
     (-*)
-    echo "Unknown option $1"
-    exit 2
+      echo "Unknown option $1"
+      exit 2
     ;;
     *)
-    print_options
-    exit 3
+      print_options
+      exit 3
     ;;
     esac
     shift
@@ -75,7 +76,7 @@ check_options() {
 
 cold_flash() {
   if [ -f src/omap34usbboot/out/usbboot ]; then
-    prefix=src/omap34usbboot/out
+    prefix=src/omap34usbboot/out #lb obsolete
   else
     arch=$(uname -m)
     case "$arch" in
@@ -283,7 +284,7 @@ if [ "$install" == "1" ]; then
   fi
 fi
 
-if [ "$install" == "1" ] && [ "$dieid" != "" ]; then
+if [ "$install" == "1" ] && [ "$dieid" != "" ]; then #lb merge with above; dieid checked below
 
   # Final check for the dieid length to be 32
   if [ ${#dieid} != "32" ]; then
@@ -291,10 +292,10 @@ if [ "$install" == "1" ] && [ "$dieid" != "" ]; then
     exit 4
   fi
 
-  disk_prefix="/dev/disk/by-id/usb-Linux_File-Stor_Gadget_"
+  disk_prefix="/dev/disk/by-id/usb-Linux_File-Stor_Gadget_" #lb clearer if on single line
   disk_postfix="-0:0"
   disk=$disk_prefix$dieid$disk_postfix
-  if ! wait_for_emmc $disk; then
+  if ! wait_for_emmc $disk; then #lb no error here?
     exit 5
   fi
 
@@ -308,9 +309,10 @@ if [ "$install" == "1" ] && [ "$dieid" != "" ]; then
     exit 7
   fi
 
-  if ! install_on_emmc $dieid $disk $rootfs_file; then
+  if ! install_on_emmc $dieid $disk $rootfs_file; then #lb no error here?
     exit 8
   fi
+
   echo "Done, please power cycle the installed device"
-  exit 0
 fi
+
