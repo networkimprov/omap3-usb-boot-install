@@ -30,6 +30,9 @@ install=0
 dieid=""
 rootfs_file=""
 
+main() { #lb move main script here, invoke main at end
+}
+
 print_options() {
   echo "usage: $0 [-u | --update] [-i[rootfs.tar.gz] | --install[=rootfs.tar.gz]]"
 }
