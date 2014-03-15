@@ -30,7 +30,58 @@ install=0
 dieid=""
 rootfs_file=""
 
-main() { #lb move main script here, invoke main at end
+main() {
+  check_options $@
+
+  if [ "$update" == "1" ]; then
+    echo "Update cold flash images..."
+    if ! update_images; then
+      echo "ERROR: Could not update images"
+      return 1
+    fi
+  fi
+
+  if [ "$install" == "1" ]; then
+    echo "Cold flashing over USB..."
+    if ! cold_flash; then
+      echo "ERROR: Could not cold flash"
+      return 2
+    fi
+  fi
+
+  if [ "$install" == "1" ] && [ "$dieid" != "" ]; then #lb merge with above; dieid checked below
+
+    # Final check for the dieid length to be 32
+    if [ ${#dieid} != "32" ]; then
+      echo "ERROR: Bad dieid $dieid ${#dieid}"
+      return 4
+    fi
+
+    disk_prefix="/dev/disk/by-id/usb-Linux_File-Stor_Gadget_" #lb clearer if on single line
+    disk_postfix="-0:0"
+    disk=$disk_prefix$dieid$disk_postfix
+    if ! wait_for_emmc $disk; then #lb no error here?
+      return 5
+    fi
+
+    if [ "$rootfs_file" == "" ]; then
+      echo "WARNING: No rootfs specified, assuming manual install"
+      return 6
+    fi
+
+    if [ ! -f $rootfs_file ]; then
+      echo "ERROR: Could not find file (or absolute path) for rootfs $rootfs_file"
+      return 7
+    fi
+
+    if ! install_on_emmc $dieid $disk $rootfs_file; then #lb no error here?
+      return 8
+    fi
+
+    echo "Done, please power cycle the installed device"
+  fi
+
+  return 0
 }
 
 print_options() {
@@ -266,56 +317,8 @@ install_on_emmc() {
 }
 
 #
-# Main program
+# Invoke main function above
 #
-
-check_options $@
-
-if [ "$update" == "1" ]; then
-  echo "Update cold flash images..."
-  if ! update_images; then
-    echo "ERROR: Could not update images"
-    exit 2
-  fi
+if ! main $@; then
+  exit 1
 fi
-
-if [ "$install" == "1" ]; then
-  echo "Cold flashing over USB..."
-  if ! cold_flash; then
-    echo "ERROR: Could not cold flash"
-    exit 3
-  fi
-fi
-
-if [ "$install" == "1" ] && [ "$dieid" != "" ]; then #lb merge with above; dieid checked below
-
-  # Final check for the dieid length to be 32
-  if [ ${#dieid} != "32" ]; then
-    echo "ERROR: Bad dieid $dieid ${#dieid}"
-    exit 4
-  fi
-
-  disk_prefix="/dev/disk/by-id/usb-Linux_File-Stor_Gadget_" #lb clearer if on single line
-  disk_postfix="-0:0"
-  disk=$disk_prefix$dieid$disk_postfix
-  if ! wait_for_emmc $disk; then #lb no error here?
-    exit 5
-  fi
-
-  if [ "$rootfs_file" == "" ]; then
-    echo "WARNING: No rootfs specified, assuming manual install"
-    exit 6
-  fi
-
-  if [ ! -f $rootfs_file ]; then
-    echo "ERROR: Could not find file (or absolute path) for rootfs $rootfs_file"
-    exit 7
-  fi
-
-  if ! install_on_emmc $dieid $disk $rootfs_file; then #lb no error here?
-    exit 8
-  fi
-
-  echo "Done, please power cycle the installed device"
-fi
-
