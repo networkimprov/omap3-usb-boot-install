@@ -26,6 +26,7 @@ SZ_8M=8388608
 SZ_20M=20971520
 
 update=0
+tests=0
 install=0
 dieid=""
 rootfs_file=""
@@ -55,9 +56,26 @@ main() {
     fi
 
     disk="/dev/disk/by-id/usb-Linux_File-Stor_Gadget_"$dieid"-0:0"
+    uart="/dev/serial/by-id/usb-Network_Improv_Multi_Gadget_"$dieid"-if00"
+
     if ! wait_for_emmc $disk; then
       echo "ERROR: Could not find device $diedid"
       return 5
+    fi
+
+    echo "Debug UART at $uart"
+
+    if [ "$tests" == "1" ]; then
+      if [ ! -c $uart ]; then
+        echo "ERROR: Could not find UART $uart"
+        return 5
+      fi
+
+      echo "Running test scripts.."
+      if ! serial_run_shell_script $uart scripts/led_blink_yellow.sh 0; then
+        echo "ERROR: Tests failed, aborting"
+        return 5
+      fi
     fi
 
     if [ "$rootfs_file" == "" ]; then
@@ -75,6 +93,10 @@ main() {
       return 8
     fi
 
+    if ! serial_run_shell_script $uart scripts/led_blink_green.sh 0; then
+      echo "ERROR: Could not set LED"
+      return 9
+    fi
     echo "Done, please power cycle the installed device"
   fi
 
@@ -82,7 +104,7 @@ main() {
 }
 
 print_options() {
-  echo "usage: $0 [-u | --update] [-i[rootfs.tar.gz] | --install[=rootfs.tar.gz]]"
+  echo "usage: $0 [-u | --update] [-i[rootfs.tar.gz] | --install[=rootfs.tar.gz]] [-t | --tests]"
 }
 
 check_options() {
@@ -91,7 +113,7 @@ check_options() {
     exit 0
   fi
 
-  if ! options=$(getopt -o ui:: -l update,install:: -- "$@"); then
+  if ! options=$(getopt -o ui::t -l update,install::,tests -- "$@"); then
     print_options
     exit 1
   fi
@@ -107,6 +129,9 @@ check_options() {
       rootfs_file=$2
       install=1
       shift
+    ;;
+    -t|--tests)
+      tests=1
     ;;
     (--)
       shift
@@ -233,6 +258,44 @@ wait_for_emmc() {
   echo "Found mass storage at $emmc"
 
   return 0
+}
+
+#
+# Runs a shell script over the UART using socat.
+# Will fail by default and only shows the following lines
+# printed by the shell script:
+# ERROR: Some message
+# SUCCESS: Some message
+# Returns 0 only if the shell script prints out a line
+# SUCCESS: Some message
+# Sorry, no passing of arguments to the script at this point.
+#
+serial_run_shell_script() {
+  uart=$1
+  test_script=$2
+  verbose=$1
+  ret=1
+
+  if [ ! -f $test_script ]; then
+    echo "Could not find script $test_script"
+    return $ret
+  fi
+
+  while read -r output; do
+    if [ "$verbose" == "1" ]; then
+      echo $output
+    fi
+    if echo $output | grep "ERROR: " > /dev/null; then
+      echo $output
+      ret=2
+    fi
+    if echo $output | grep "SUCCESS: " > /dev/null; then
+      echo $output
+      ret=0
+    fi
+  done < <(cat $test_script | sudo socat - $uart,ispeed=115200,ospeed=9600,raw,echo=0 2>&1)
+
+  return $ret
 }
 
 install_on_emmc() {
