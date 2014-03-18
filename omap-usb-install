@@ -182,7 +182,7 @@ cold_flash() {
       exit 4
     fi 
     dieid=$(echo $output | awk '{ split($0,a,"dieid: "); print substr(a[2], 1, 32) }')
-  done < <(sudo $prefix/usbboot $prefix/omap3_aboot install-image 2>&1)
+  done < <(sudo $prefix/usbboot $prefix/omap3_aboot images/install-image 2>&1)
 
   if [ "$dieid" = "" ]; then
     echo "ERROR: failed to get dieid"
@@ -218,20 +218,21 @@ pad_image() {
 
 update_images() {
 
-  if ! mkimage -A arm -T script -C none -n "Install script" -d boot.script boot.scr; then
+  if ! mkimage -A arm -T script -C none -n "Install script" -d src/scripts/boot.script images/boot.scr; then
     echo "ERRROR: could not mkimage install script"
     exit 3
   fi
 
-  pad_image u-boot.bin $SZ_512K    # at 0x80008000
-  pad_image MLO $SZ_512K           # at 0x80088000
-  pad_image u-boot.img $SZ_512K    # at 0x80108000
-  pad_image boot.scr $SZ_512K      # at 0x80188000
-  pad_image dtb $SZ_2M             # at 0x80208000
-  pad_image zimage $SZ_8M          # at 0x80408000
-  pad_image initramfs $SZ_20M      # at 0x80c08000
+  pad_image images/u-boot.bin $SZ_512K    # at 0x80008000
+  pad_image images/MLO $SZ_512K           # at 0x80088000
+  pad_image images/u-boot.img $SZ_512K    # at 0x80108000
+  pad_image images/boot.scr $SZ_512K      # at 0x80188000
+  pad_image images/dtb $SZ_2M             # at 0x80208000
+  pad_image images/zimage $SZ_8M          # at 0x80408000
+  pad_image images/initramfs $SZ_20M      # at 0x80c08000
 
-  if ! cat u-boot.bin MLO u-boot.img boot.scr dtb zimage initramfs > install-image; then
+  if ! cat images/u-boot.bin images/MLO images/u-boot.img images/boot.scr \
+      images/dtb images/zimage images/initramfs > images/install-image; then
     echo "ERROR: failed to create install image"
     exit 4
   fi
