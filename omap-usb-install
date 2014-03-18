@@ -26,6 +26,7 @@ SZ_8M=8388608
 SZ_20M=20971520
 
 update=0
+boot_only=0
 wipe=0
 loop=0
 tests=0
@@ -51,6 +52,14 @@ main() {
       return 2
     fi
     return 0
+  fi
+
+  if [ "$boot_only" == "1" ]; then
+    echo "Booting kernel without flashing..."
+    if ! cold_flash images/kernel-image; then
+      echo "ERROR: Could not load kernel boot image"
+      return 3
+    fi
   fi
 
   if [ "$install" == "1" ]; then
@@ -124,7 +133,7 @@ check_options() {
     exit 0
   fi
 
-  if ! options=$(getopt -o uwi::lt -l update,wipe,install::,loop,tests -- "$@"); then
+  if ! options=$(getopt -o uwki::lt -l update,wipe,kernel,install::,loop,tests -- "$@"); then
     print_options
     exit 1
   fi
@@ -138,6 +147,9 @@ check_options() {
     ;;
     -w|--wipe)
       wipe=1
+    ;;
+    -k|--kernel)
+      boot_only=1
     ;;
     -i|--install)
       rootfs_file=$2
@@ -247,6 +259,11 @@ update_images() {
     exit return 2
   fi
 
+  if ! mkimage -A arm -T script -C none -n "Kernel boot script" -d src/scripts/kernel.script images/kernel.scr; then
+    echo "ERRROR: could not mkimage kernel boot script"
+    exit return 2
+  fi
+
   pad_image images/u-boot.bin $SZ_512K    # at 0x80008000
   pad_image images/MLO $SZ_512K           # at 0x80088000
   pad_image images/u-boot.img $SZ_512K    # at 0x80108000
@@ -254,6 +271,7 @@ update_images() {
   # One of these depending of the command line options
   pad_image images/boot.scr $SZ_512K      # at 0x80188000
   pad_image images/erase.scr $SZ_512K	  # at 0x80188000
+  pad_image images/kernel.scr $SZ_512K    # at 0x80188000
 
   pad_image images/dtb $SZ_2M             # at 0x80208000
   pad_image images/zimage $SZ_8M          # at 0x80408000
@@ -268,6 +286,12 @@ update_images() {
   if ! cat images/u-boot.bin images/MLO images/u-boot.img images/erase.scr > \
       images/erase-image; then
     echo "ERROR: failed to create erase image"
+    return 4
+  fi
+
+  if ! cat images/u-boot.bin images/MLO images/u-boot.img images/kernel.scr \
+      images/dtb images/zimage images/initramfs > images/kernel-image; then
+    echo "ERROR: failed to create kernel boot image"
     return 4
   fi
 
