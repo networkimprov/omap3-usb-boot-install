@@ -1,0 +1,14 @@
+echo Erasing old u-boot environment
+nandecc hw
+nand erase 240000 100000
+
+echo Erasing MLO
+nandecc hw
+nand erase 0 80000
+
+echo Erasing u-boot in NAND
+nandecc hw
+nand erase 80000 80000
+
+echo Resetting install script header in memory
+mw 80188000 0 8
