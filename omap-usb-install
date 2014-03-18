@@ -47,20 +47,16 @@ main() {
       echo "ERROR: Could not cold flash"
       return 2
     fi
-  fi
 
-  if [ "$install" == "1" ] && [ "$dieid" != "" ]; then #lb merge with above; dieid checked below
-
-    # Final check for the dieid length to be 32
+    # Valid dieid length must be 32
     if [ ${#dieid} != "32" ]; then
       echo "ERROR: Bad dieid $dieid ${#dieid}"
-      return 4
+      return 3
     fi
 
-    disk_prefix="/dev/disk/by-id/usb-Linux_File-Stor_Gadget_" #lb clearer if on single line
-    disk_postfix="-0:0"
-    disk=$disk_prefix$dieid$disk_postfix
-    if ! wait_for_emmc $disk; then #lb no error here?
+    disk="/dev/disk/by-id/usb-Linux_File-Stor_Gadget_"$dieid"-0:0"
+    if ! wait_for_emmc $disk; then
+      echo "ERROR: Could not find device $diedid"
       return 5
     fi
 
@@ -74,7 +70,8 @@ main() {
       return 7
     fi
 
-    if ! install_on_emmc $dieid $disk $rootfs_file; then #lb no error here?
+    if ! install_on_emmc $dieid $disk $rootfs_file; then
+      echo "ERROR: Could not install on eMMC for device $dieid"
       return 8
     fi
 
@@ -91,7 +88,7 @@ print_options() {
 check_options() {
   if [ $# -lt 1 ]; then
     print_options
-    #lb exit 0
+    exit 0
   fi
 
   if ! options=$(getopt -o ui:: -l update,install:: -- "$@"); then
@@ -129,8 +126,9 @@ check_options() {
 }
 
 cold_flash() {
+  # Check for a locally compiled omap34usbboot binary first
   if [ -f src/omap34usbboot/out/usbboot ]; then
-    prefix=src/omap34usbboot/out #lb obsolete
+    prefix=src/omap34usbboot/out
   else
     arch=$(uname -m)
     case "$arch" in
@@ -227,7 +225,7 @@ wait_for_emmc() {
     ((timeout--))
     if [ "$timeout" -lt "1" ]; then
       echo "ERROR: Timed out waiting for $emmc"
-      exit 1
+      return 1
     fi
     sleep 1
   done
@@ -245,44 +243,44 @@ install_on_emmc() {
   echo "Partitioning $emmc..."
   if ! sudo /sbin/parted --script $emmc mklabel msdos; then
     echo "ERROR: Could not mklabel"
-    exit 1
+    return 1
   fi
   if ! sudo /sbin/parted --script $emmc mkpart primary fat32 2048s 128MB; then
     echo "ERROR: Could not add fat32 partition"
-    exit 2
+    return 2
   fi
   if ! sudo /sbin/parted --script $emmc mkpart primary ext4 128MB 100%; then
     echo "ERROR: Could not add ext4 partition"
-    exit 3
+    return 3
   fi
 
   echo "Formatting new partitions on $emmc..."
   if ! sudo mkfs.vfat $emmc-part1; then
     echo "ERROR: Could not mkfs.vfat"
-    exit 4
+    return 4
   fi
   if ! sudo mkfs.ext4 $emmc-part2; then
     echo "ERROR: Could not mkfs.ext4"
-    exit 5
+    return 5
   fi
 
   echo "Adding tmp directories for mounting vfat and ext4..."
   if ! vfat=$(mktemp -d /tmp/XXXXXXXX-$dieid-vfat); then
     echo "ERROR: Could not mktemp for vfat"
-    exit 6
+    return 6
   fi
   if ! ext4=$(mktemp -d /tmp/XXXXXXXX-$dieid-ext4); then
     echo "ERROR: Could not mktemp for ext4"
-    exit 7
+    return 7
   fi
   if ! sudo mount $emmc-part1 $vfat; then
     echo "ERROR: Could not mount vfat"
-    exit 8
+    return 8
   fi
   echo "Mounted vfat to temporary location $vfat"
   if ! sudo mount $emmc-part2 $ext4; then
     echo "ERROR: Could not mount ext4"
-    exit 9
+    return 9
   fi
   echo "Mounted ext4 to temporary location $ext4"
 
@@ -293,26 +291,26 @@ install_on_emmc() {
   echo "Untarring root file system to $ext4..."
   if ! sudo tar zxf $rootfs -C $ext4; then
     echo "ERROR: Untarring failed for $rootfs"
-    exit 11
+    return 11
   fi
 
   echo "Syncing, unmounting and cleaning up tmp directories..."
   sync
   if ! sudo umount $ext4; then
     echo "ERROR: Could not umount ext4"
-    exit 12
+    return 12
   fi
   if ! sudo umount $vfat; then
     echo "ERROR: Could not umount vfat"
-    exit 13
+    return 13
   fi
   if ! rmdir $ext4; then
     echo "ERROR: Could not remove tmp dir for ext4"
-    exit 14
+    return 14
   fi
   if ! rmdir $vfat; then
     echo "ERROR: Could not remove tmp dir for vfat"
-    exit 15
+    return 15
   fi
 }
 
