@@ -76,7 +76,7 @@ main() {
     fi
 
     disk="/dev/disk/by-id/usb-Linux_File-Stor_Gadget_"$dieid"-0:0"
-    uart="/dev/serial/by-id/usb-Network_Improv_Multi_Gadget_"$dieid"-if00"
+    uart="/dev/serial/by-id/usb-Network_Improv_Multi_Gadget_"$dieid"-if02"
 
     if ! wait_for_emmc $disk; then
       echo "ERROR: Could not find device $diedid"
@@ -332,7 +332,7 @@ wait_for_emmc() {
 serial_run_shell_script() {
   uart=$1
   test_script=$2
-  verbose=$1
+  verbose=$3
   ret=1
 
   if [ ! -f $test_script ]; then
