@@ -40,12 +40,12 @@ main() {
   if [ "$update" == "1" ]; then
     echo "Update cold flash images..."
     if ! update_images; then
-      echo "ERROR: Could not update images"
+      echo "ERROR: Could not update images" # use exit in subroutines so we don't need these tests & msgs
       return 1
     fi
   fi
 
-  if [ "$wipe" == "1" ]; then
+  if [ "$wipe" == "1" ]; then # make wipe & kernel --install variants?
     echo "Wiping u-boot in NAND..."
     if ! cold_flash images/erase-image; then
       echo "ERROR: Could not wipe u-boot in NAND"
@@ -60,6 +60,7 @@ main() {
       echo "ERROR: Could not load kernel boot image"
       return 3
     fi
+    return 0 # added
   fi
 
   if [ "$install" == "1" ]; then
@@ -76,7 +77,7 @@ main() {
     fi
 
     disk="/dev/disk/by-id/usb-Linux_File-Stor_Gadget_"$dieid"-0:0"
-    uart="/dev/serial/by-id/usb-Network_Improv_Multi_Gadget_"$dieid"-if02"
+    uart="/dev/serial/by-id/usb-Network_Improv_Multi_Gadget_"$dieid"-if02" # usb-Anvl_Multi_Gadget
 
     if ! wait_for_emmc $disk; then
       echo "ERROR: Could not find device $diedid"
@@ -124,7 +125,7 @@ main() {
 }
 
 print_options() {
-  echo "usage: $0 [-u | --update] [-i[rootfs.tar.gz] | --install[=rootfs.tar.gz]] [-t | --tests]"
+  echo "usage: $0 [-u | --update] [-i[rootfs.tar.gz] | --install[=rootfs.tar.gz]] [-t | --tests]" # add wipe, kernel, loop
 }
 
 check_options() {
@@ -133,6 +134,7 @@ check_options() {
     exit 0
   fi
 
+  # make wipe and kernel --install variants?
   if ! options=$(getopt -o uwki::lt -l update,wipe,kernel,install::,loop,tests -- "$@"); then
     print_options
     exit 1
@@ -152,8 +154,8 @@ check_options() {
       boot_only=1
     ;;
     -i|--install)
-      rootfs_file=$2
       install=1
+      rootfs_file=$2
       shift
     ;;
     -l|--loop)
@@ -277,20 +279,17 @@ update_images() {
   pad_image images/zimage $SZ_8M          # at 0x80408000
   pad_image images/initramfs $SZ_20M      # at 0x80c08000
 
-  if ! cat images/u-boot.bin images/MLO images/u-boot.img images/boot.scr \
-      images/dtb images/zimage images/initramfs > images/install-image; then
+  if ! cat images/{u-boot.bin,MLO,u-boot.img,boot.scr,dtb,zimage,initramfs} > images/install-image; then
     echo "ERROR: failed to create install image"
     return 3
   fi
 
-  if ! cat images/u-boot.bin images/MLO images/u-boot.img images/erase.scr > \
-      images/erase-image; then
+  if ! cat images/{u-boot.bin,MLO,u-boot.img,erase.scr} > images/erase-image; then
     echo "ERROR: failed to create erase image"
     return 4
   fi
 
-  if ! cat images/u-boot.bin images/MLO images/u-boot.img images/kernel.scr \
-      images/dtb images/zimage images/initramfs > images/kernel-image; then
+  if ! cat images/{u-boot.bin,MLO,u-boot.img,kernel.scr,dtb,zimage,initramfs} > images/kernel-image; then
     echo "ERROR: failed to create kernel boot image"
     return 4
   fi
@@ -376,12 +375,14 @@ install_on_emmc() {
     return 3
   fi
 
+  sudo umount $emmc-part1
+
   echo "Formatting new partitions on $emmc..."
-  if ! sudo mkfs.vfat $emmc-part1; then
+  if ! sudo mkfs.vfat $(readlink -f $emmc-part1); then
     echo "ERROR: Could not mkfs.vfat"
     return 4
   fi
-  if ! sudo mkfs.ext4 $emmc-part2; then
+  if ! sudo mkfs.ext4 $(readlink -f $emmc-part2); then
     echo "ERROR: Could not mkfs.ext4"
     return 5
   fi
@@ -439,6 +440,7 @@ install_on_emmc() {
 #
 # Invoke main function above
 #
+# do the loop in main()
 
 while true; do
   if ! main $@; then
