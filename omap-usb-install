@@ -37,6 +37,8 @@ rootfs_file=""
 main() {
   check_options $@
 
+  #cd $(dirname $0) # ? in case run from outside home dir
+
   if [ "$update" == "1" ]; then
     echo "Update cold flash images..."
     if ! update_images; then
