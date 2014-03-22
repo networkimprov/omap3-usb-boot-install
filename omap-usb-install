@@ -375,7 +375,9 @@ install_on_emmc() {
     return 3
   fi
 
+  sleep 2 # let automount finish
   sudo umount $emmc-part1
+  sudo umount $emmc-part2
 
   echo "Formatting new partitions on $emmc..."
   if ! sudo mkfs.vfat $(readlink -f $emmc-part1); then
@@ -388,11 +390,11 @@ install_on_emmc() {
   fi
 
   echo "Adding tmp directories for mounting vfat and ext4..."
-  if ! vfat=$(mktemp -d /tmp/XXXXXXXX-$dieid-vfat); then
+  if ! vfat=$(mktemp -d /tmp/$dieid-vfat-XXXXXXXX); then
     echo "ERROR: Could not mktemp for vfat"
     return 6
   fi
-  if ! ext4=$(mktemp -d /tmp/XXXXXXXX-$dieid-ext4); then
+  if ! ext4=$(mktemp -d /tmp/$dieid-ext4-XXXXXXXX); then
     echo "ERROR: Could not mktemp for ext4"
     return 7
   fi
@@ -427,20 +429,16 @@ install_on_emmc() {
     echo "ERROR: Could not umount vfat"
     return 13
   fi
-  if ! rmdir $ext4; then
-    echo "ERROR: Could not remove tmp dir for ext4"
-    return 14
-  fi
-  if ! rmdir $vfat; then
-    echo "ERROR: Could not remove tmp dir for vfat"
-    return 15
-  fi
+  test -d $ext4 && rmdir $ext4 # umount may unlink /tmp mountpoint
+  test -d $vfat && rmdir $vfat
+  return 0
 }
 
 #
 # Invoke main function above
 #
 # do the loop in main()
+# sudo main $@ # and remove other sudo's?
 
 while true; do
   if ! main $@; then
