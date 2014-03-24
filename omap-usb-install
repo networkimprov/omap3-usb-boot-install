@@ -44,58 +44,66 @@ main() {
     update_images
   fi
 
-  if [ "$wipe" == "1" ]; then # make wipe & kernel --install variants?
-    echo "Wiping u-boot in NAND..."
-    cold_flash images/erase-image
-    return 0
-  fi
+  while [ "$install" == "1" -o "$wipe" == "1" -o "$boot_only" == "1" ]; do # make wipe & kernel --install variants?
+    if [ "$wipe" == "1" ]; then
+      echo "Wiping u-boot in NAND..."
+      cold_flash images/erase-image
+    elif [ "$boot_only" == "1" ]; then
+      echo "Booting kernel without flashing..."
+      cold_flash images/kernel-image
+    else
+      echo "Cold flashing over USB..."
+      cold_flash images/install-image
 
-  if [ "$boot_only" == "1" ]; then
-    echo "Booting kernel without flashing..."
-    cold_flash images/kernel-image
-    return 0 # added
-  fi
-
-  if [ "$install" == "1" ]; then
-    echo "Cold flashing over USB..."
-    cold_flash images/install-image
-
-    # Valid dieid length must be 32
-    if [ ${#dieid} != "32" ]; then
-      error_exit "ERROR: Bad dieid $dieid ${#dieid}"
-    fi
-
-    disk="/dev/disk/by-id/usb-Linux_File-Stor_Gadget_"$dieid"-0:0"
-    uart="/dev/serial/by-id/usb-Network_Improv_Multi_Gadget_"$dieid"-if02" # usb-Anvl_Multi_Gadget
-
-    wait_for_emmc $disk
-
-    echo "Debug UART at $uart"
-
-    if [ "$tests" == "1" ]; then
-      if [ ! -c $uart ]; then
-        error_exit "ERROR: Could not find UART $uart"
+      # Valid dieid length must be 32
+      if [ ${#dieid} != "32" ]; then
+        error_exit "ERROR: Bad dieid $dieid ${#dieid}"
       fi
-      echo "Running test scripts.."
-      serial_run_shell_script $uart scripts/led_blink_yellow.sh 0
+
+      disk="/dev/disk/by-id/usb-Linux_File-Stor_Gadget_"$dieid"-0:0"
+      uart="/dev/serial/by-id/usb-Network_Improv_Multi_Gadget_"$dieid"-if02" # usb-Anvl_Multi_Gadget
+
+      wait_for_emmc $disk
+
+      echo "Debug UART at $uart"
+
+      if [ "$tests" == "1" ]; then
+        if [ ! -c $uart ]; then
+          error_exit "ERROR: Could not find UART $uart"
+        fi
+        echo "Running test scripts.."
+        if ! serial_run_shell_script $uart scripts/led_blink_yellow.sh 0; then
+          if [ "$loop" == "1" ]; then
+            echo "Set aside this device for repair, and connect the next device"
+            continue
+          else
+            break
+          fi
+        fi
+      fi
+
+      if [ "$rootfs_file" == "" ]; then
+        echo "WARNING: No rootfs specified, assuming manual install"
+      else
+        if [ ! -f $rootfs_file ]; then
+          error_exit "ERROR: Could not find file (or absolute path) for rootfs $rootfs_file"
+        fi
+
+        install_on_emmc $dieid $disk $rootfs_file
+
+        serial_run_shell_script $uart scripts/led_blink_green.sh 0
+      fi
     fi
 
-    if [ "$rootfs_file" == "" ]; then
-      echo "WARNING: No rootfs specified, assuming manual install"
-      return 0
+    if [ "$loop" == "1" ]; then
+      echo "Done, please connect the next device"
+    else
+      echo "Done, please power cycle the device"
+      break
     fi
+  done
 
-    if [ ! -f $rootfs_file ]; then
-      error_exit "ERROR: Could not find file (or absolute path) for rootfs $rootfs_file"
-    fi
-
-    install_on_emmc $dieid $disk $rootfs_file
-
-    serial_run_shell_script $uart scripts/led_blink_green.sh 0
-    echo "Done, please power cycle the installed device"
-  fi
-
-  return 0
+  exit 0
 }
 
 options_exit() {
@@ -297,6 +305,7 @@ serial_run_shell_script() {
   uart=$1
   test_script=$2
   verbose=$3
+  ret=1
 
   if [ ! -f $test_script ]; then
     error_exit "Could not find script $test_script"
@@ -307,14 +316,16 @@ serial_run_shell_script() {
       echo $output
     fi
     if echo $output | grep "ERROR: " > /dev/null; then
-      error_exit "$output"
+      echo $output
+      return 1
     fi
     if echo $output | grep "SUCCESS: " > /dev/null; then
       echo $output
+      ret=0
     fi
   done < <(cat $test_script | sudo socat - $uart,ispeed=115200,ospeed=9600,raw,echo=0 2>&1)
 
-  return 0
+  return $ret
 }
 
 install_on_emmc() {
@@ -386,14 +397,7 @@ install_on_emmc() {
 #
 # Invoke main function above
 #
-# do the loop in main()
-# sudo main $@ # and remove other sudo's?
+# sudo here and remove other sudo's?
 
-while true; do
-  if ! main $@; then
-    exit 1
-  fi
-  if [ "$loop" == "0" ]; then
-    exit 0
-  fi
-done
+main $@
+
