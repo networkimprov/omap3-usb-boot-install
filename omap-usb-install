@@ -275,10 +275,7 @@ wait_for_emmc() {
   emmc=$1
   timeout=45
   echo "Waiting for mass storage device $emmc"
-  while [ 1 ]; do
-    if [ -b $emmc ]; then
-      break
-    fi
+  while [ ! -b $emmc ]; do
     ((timeout--))
     if [ "$timeout" -lt "1" ]; then
       error_exit "ERROR: Timed out waiting for $emmc"
@@ -345,8 +342,8 @@ install_on_emmc() {
   fi
 
   sleep 2 # let automount finish
-  sudo umount $emmc-part1
-  sudo umount $emmc-part2
+  test -b $emmc-part1 && sudo umount $emmc-part1
+  test -b $emmc-part2 && sudo umount $emmc-part2
 
   echo "Formatting new partitions on $emmc..."
   if ! sudo mkfs.vfat $(readlink -f $emmc-part1); then
