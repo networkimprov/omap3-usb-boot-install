@@ -26,8 +26,6 @@ SZ_8M=8388608
 SZ_20M=20971520
 
 update=0
-boot_only=0
-wipe=0
 loop=0
 tests=0
 install=0
@@ -44,11 +42,11 @@ main() {
     update_images
   fi
 
-  while [ "$install" == "1" -o "$wipe" == "1" -o "$boot_only" == "1" ]; do # make wipe & kernel --install variants?
-    if [ "$wipe" == "1" ]; then
+  while [ "$install" == "1" ]; do
+    if [ "$rootfs_file" == "erase" ]; then
       echo "Wiping u-boot in NAND..."
       cold_flash images/erase-image
-    elif [ "$boot_only" == "1" ]; then
+    elif [ "$rootfs_file" == "kernel" ]; then
       echo "Booting kernel without flashing..."
       cold_flash images/kernel-image
     else
@@ -107,7 +105,7 @@ main() {
 }
 
 options_exit() {
-  echo "usage: $0 [-u | --update] [-i[rootfs.tar.gz] | --install[=rootfs.tar.gz]] [-t | --tests]" # add wipe, kernel, loop
+  echo "usage: $0 [-u | --update] [-i | --install[=][rootfs.tar.gz | erase | kernel]] [-t | --tests] [-l | --loop]"
   exit 1
 }
 
@@ -121,8 +119,7 @@ check_options() {
     options_exit
   fi
 
-  # make wipe and kernel --install variants?
-  if ! options=$(getopt -o uwki::lt -l update,wipe,kernel,install::,loop,tests -- "$@"); then
+  if ! options=$(getopt -o ui::lt -l update,install::,loop,tests -- "$@"); then
     options_exit
   fi
 
@@ -132,12 +129,6 @@ check_options() {
     case $1 in
     -u|--update)
       update=1
-    ;;
-    -w|--wipe)
-      wipe=1
-    ;;
-    -k|--kernel)
-      boot_only=1
     ;;
     -i|--install)
       install=1
