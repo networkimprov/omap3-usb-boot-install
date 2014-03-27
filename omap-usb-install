@@ -339,7 +339,7 @@ install_on_emmc() {
   test -b $emmc-part2 && sudo umount $emmc-part2
 
   echo "Formatting new partitions on $emmc..."
-  if ! sudo mkfs.vfat $(readlink -f $emmc-part1); then
+  if ! sudo mkfs.vfat -F 32 $(readlink -f $emmc-part1); then
     error_exit "ERROR: Could not mkfs.vfat"
   fi
   if ! sudo mkfs.ext4 $(readlink -f $emmc-part2); then
@@ -362,9 +362,11 @@ install_on_emmc() {
   fi
   echo "Mounted ext4 to temporary location $ext4"
 
-  #
-  # REVISIT: Add copying of MLO and u-boot to $vfat here
-  #
+  echo "Populating VFAT partition with u-boot, kernel and initramfs..."
+  if ! sudo cp images/MLO images/u-boot.bin images/uEnv.txt \
+      images/dtb images/zimage images/initramfs $vfat/; then
+    error_exit "ERROR: Could not copy files to VFAT"
+  fi
 
   echo "Untarring root file system to $ext4..."
   if ! sudo tar zxf $rootfs -C $ext4; then
