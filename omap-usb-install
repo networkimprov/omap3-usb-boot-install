@@ -177,6 +177,7 @@ cold_flash() {
     esac
   fi
 
+  #instead of after done: sudo $prefix/usbboot $prefix/omap3_aboot $image 2>&1 |
   while read -r output; do
     echo $output
     if echo $output | grep "No such file or directory" > /dev/null; then
@@ -299,6 +300,7 @@ serial_run_shell_script() {
     error_exit "Could not find script $test_script"
   fi
 
+  #instead of after done: cat $test_script | sudo socat - $uart,ispeed=115200,ospeed=9600,raw,echo=0 2>&1 |
   while read -r output; do
     if [ "$verbose" == "1" ]; then
       echo $output
