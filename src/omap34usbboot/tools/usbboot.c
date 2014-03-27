@@ -118,6 +118,7 @@ int usb_boot(usb_handle *usb,
 	case DEVICE_ID_36XX:	/* 0xD00E */
 		count = usb_read(usb, &(asic_id.omap3), sizeof(asic_id.omap3));
 		usb->device = (asic_id.omap3.id_subblock.device[0] << 8) | asic_id.omap3.id_subblock.device[1];
+		sleep(1);
 		break;
 	default:
 		break;
@@ -139,9 +140,17 @@ int usb_boot(usb_handle *usb,
 /* End by Rockefeller - Parse ASIC ID */
 
 	fprintf(stderr,"sending 2ndstage to target...\n");
-	usb_write(usb, &msg_boot, sizeof(msg_boot));
-	usb_write(usb, &msg_size, sizeof(msg_size));
-	usb_write(usb, data, sz);
+	count = usb_write(usb, &msg_boot, sizeof(msg_boot));
+	if (count != sizeof(msg_boot))
+		return -1;
+
+	count = usb_write(usb, &msg_size, sizeof(msg_size));
+	if (count != sizeof(msg_size))
+		return -1;
+
+	count = usb_write(usb, data, sz);
+	if (count != sz)
+		return -1;
 
 	if (data2) {
 		char dieid[64];
@@ -154,10 +163,20 @@ int usb_boot(usb_handle *usb,
 		}
 		msg_size = sz2;
 		fprintf(stderr,"sending image to target...\n");
-		usb_write(usb, &msg_size, sizeof(msg_size));
-		usb_write(usb, data2, sz2);
+		count = usb_write(usb, &msg_size, sizeof(msg_size));
+		if (count != sizeof(msg_size))
+			return -1;
 
-		usb_read(usb, dieid, sizeof(dieid));
+		count = usb_write(usb, data2, sz2);
+		if (count != sz2)
+			return -1;
+
+		count = usb_read(usb, dieid, sizeof(dieid));
+		if (count != sizeof(dieid)) {
+			fprintf(stderr, "could not get die ID\n");
+			return -1;
+		}
+
 		fprintf(stderr, "dieid: %s\n", dieid);
 	}
 	
@@ -259,6 +278,8 @@ int main(int argc, char **argv)
 	}
 
 	for (;;) {
+		int res;
+
 		usb = usb_open(match_omap4_bootloader);
 		if (usb)
 		{
@@ -281,7 +302,14 @@ int main(int argc, char **argv)
 				}
 			}
 
-			return usb_boot(usb, data, sz, data2, sz2);
+			res = usb_boot(usb, data, sz, data2, sz2);
+			if (res) {
+				fprintf(stderr,
+					"error %i, please replug the device without a battery\n",
+					res);
+			} else {
+				return res;
+			}
 		}
 		if (once) {
 			once = 0;
