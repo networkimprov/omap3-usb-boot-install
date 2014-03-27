@@ -1,3 +1,6 @@
 .*
 .o
+*.orig
+*.rej
+*~
 src/omap34usbboot/out/
