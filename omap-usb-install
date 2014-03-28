@@ -29,6 +29,7 @@ update=0
 loop=0
 tests=0
 install=0
+install_image=""
 dieid=""
 rootfs_file=""
 
@@ -42,16 +43,18 @@ main() {
     update_images
   fi
 
+  generate_install_image
+
   while [ "$install" == "1" ]; do
     if [ "$rootfs_file" == "erase" ]; then
       echo "Wiping u-boot in NAND..."
-      cold_flash images/erase-image
+      cold_flash $install_image
     elif [ "$rootfs_file" == "kernel" ]; then
       echo "Booting kernel without flashing..."
-      cold_flash images/kernel-image
+      cold_flash $install_image
     else
       echo "Cold flashing over USB..."
-      cold_flash images/install-image
+      cold_flash $install_image
 
       # Valid dieid length must be 32
       if [ ${#dieid} != "32" ]; then
@@ -83,7 +86,7 @@ main() {
       if [ "$rootfs_file" == "" ]; then
         echo "WARNING: No rootfs specified, assuming manual install"
       else
-        if [ ! -f $rootfs_file ]; then
+        if [ "$rootfs_file" != "initramfs" ] && [ ! -f $rootfs_file ]; then
           error_exit "ERROR: Could not find file (or absolute path) for rootfs $rootfs_file"
         fi
 
@@ -101,15 +104,21 @@ main() {
     fi
   done
 
+  rm -f $install_image
+
   exit 0
 }
 
 options_exit() {
-  echo "usage: $0 [-u | --update] [-i | --install[=][rootfs.tar.gz | erase | kernel]] [-t | --tests] [-l | --loop]"
+  echo "usage: $0 [-u | --update] [-i | --install[=][rootfs.tar.gz | erase | kernel | initramfs]] [-t | --tests] [-l | --loop]"
   exit 1
 }
 
 error_exit() {
+  if [ -f $install_image ]; then
+    echo "Removing temporary install image..."
+    rm -f $install_image
+  fi
   echo $1
   exit 1
 }
@@ -199,12 +208,12 @@ cold_flash() {
   return 0
 }
 
-pad_image() {
+append_image() {
   file="$1"
   pad_size="$2"
 
   if [ ! -f $file ]; then
-    echo "Creating empty $file"
+    echo "WARNING: file $file missing, creating empty $file"
     touch $file
   fi
 
@@ -213,12 +222,51 @@ pad_image() {
     error_exit "ERROR: $file too big"
   fi
 
-  if [ $size -lt $pad_size ]; then
-    echo "Padding $file from $size to $pad_size"
-    if ! truncate -s $pad_size $file; then
-      error_exit "ERROR: truncate failed for $file"
-    fi
+  if ! tmp=$(mktemp); then
+    error_exit "ERROR: could not create tmp padded file"
   fi
+
+  if ! cp $file $tmp; then
+    error_exit "ERROR: could not copy $file for padding"
+  fi
+
+  #echo "Padding $tmp ($file) from $size to $pad_size"
+  if ! truncate -s $pad_size $tmp; then
+    error_exit "ERROR: truncate failed for $tmp"
+  fi
+
+  if ! cat $tmp >> $install_image; then
+    error_exit "ERROR: could not add $file to $install_image"
+  fi
+
+  rm -f $tmp
+}
+
+generate_install_image() {
+
+  if ! install_image=$(mktemp); then
+    error_exit "ERROR: Could not create install image file"
+  fi
+
+  append_image images/u-boot.bin $SZ_512K    # at 0x80008000
+  append_image images/MLO $SZ_512K           # at 0x80088000
+  append_image images/u-boot.img $SZ_512K    # at 0x80108000
+
+  # One of these depending of the command line options
+  if [ "$rootfs_file" == "erase" ]; then
+    append_image images/erase.scr $SZ_512K   # at 0x80188000
+    return 0
+  fi
+
+  if [ "$rootfs_file" == "kernel" ]; then
+    append_image images/kernel.scr $SZ_512K  # at 0x80188000
+  else
+    append_image images/boot.scr $SZ_512K    # at 0x80188000
+  fi
+
+  append_image images/dtb $SZ_2M             # at 0x80208000
+  append_image images/zimage $SZ_8M          # at 0x80408000
+  append_image images/initramfs $SZ_20M      # at 0x80c08000
 }
 
 update_images() {
@@ -233,31 +281,6 @@ update_images() {
 
   if ! mkimage -A arm -T script -C none -n "Kernel boot script" -d src/scripts/kernel.script images/kernel.scr; then
     error_exit "ERRROR: could not mkimage kernel boot script"
-  fi
-
-  pad_image images/u-boot.bin $SZ_512K    # at 0x80008000
-  pad_image images/MLO $SZ_512K           # at 0x80088000
-  pad_image images/u-boot.img $SZ_512K    # at 0x80108000
-
-  # One of these depending of the command line options
-  pad_image images/boot.scr $SZ_512K      # at 0x80188000
-  pad_image images/erase.scr $SZ_512K	  # at 0x80188000
-  pad_image images/kernel.scr $SZ_512K    # at 0x80188000
-
-  pad_image images/dtb $SZ_2M             # at 0x80208000
-  pad_image images/zimage $SZ_8M          # at 0x80408000
-  pad_image images/initramfs $SZ_20M      # at 0x80c08000
-
-  if ! cat images/{u-boot.bin,MLO,u-boot.img,boot.scr,dtb,zimage,initramfs} > images/install-image; then
-    error_exit "ERROR: failed to create install image"
-  fi
-
-  if ! cat images/{u-boot.bin,MLO,u-boot.img,erase.scr} > images/erase-image; then
-    error_exit "ERROR: failed to create erase image"
-  fi
-
-  if ! cat images/{u-boot.bin,MLO,u-boot.img,kernel.scr,dtb,zimage,initramfs} > images/kernel-image; then
-    error_exit "ERROR: failed to create kernel boot image"
   fi
 
   return 0
@@ -323,30 +346,44 @@ install_on_emmc() {
   emmc=$2
   rootfs=$3
 
-  echo "Partitioning $emmc..."
-  if ! sudo /sbin/parted --script $emmc mklabel msdos; then
-    error_exit "ERROR: Could not mklabel"
-  fi
-  if ! sudo /sbin/parted --script $emmc mkpart primary fat32 2048s 128MB; then
-    error_exit "ERROR: Could not add fat32 partition"
-  fi
-  if ! sudo /sbin/parted --script $emmc set 1 boot on; then
-    error_exit "ERROR: Could not set active partition"
-  fi
-  if ! sudo /sbin/parted --script $emmc mkpart primary ext4 128MB 100%; then
-    error_exit "ERROR: Could not add ext4 partition"
+  if [ "$rootfs_file" == "initramfs" ]; then
+    partition=0
+    format=0
+    untar=0
+  else
+    partition=1
+    format=1
+    untar=1
   fi
 
-  sleep 2 # let automount finish
+  if [ "$partition" == "1" ]; then
+    echo "Partitioning $emmc..."
+    if ! sudo /sbin/parted --script $emmc mklabel msdos; then
+      error_exit "ERROR: Could not mklabel"
+    fi
+    if ! sudo /sbin/parted --script $emmc mkpart primary fat32 2048s 128MB; then
+      error_exit "ERROR: Could not add fat32 partition"
+    fi
+    if ! sudo /sbin/parted --script $emmc set 1 boot on; then
+      error_exit "ERROR: Could not set active partition"
+    fi
+    if ! sudo /sbin/parted --script $emmc mkpart primary ext4 128MB 100%; then
+      error_exit "ERROR: Could not add ext4 partition"
+    fi
+  fi
+
+  sleep 2 # let possible automount finish
   test -b $emmc-part1 && sudo umount $emmc-part1
   test -b $emmc-part2 && sudo umount $emmc-part2
 
-  echo "Formatting new partitions on $emmc..."
-  if ! sudo mkfs.vfat -F 32 $(readlink -f $emmc-part1); then
-    error_exit "ERROR: Could not mkfs.vfat"
-  fi
- if ! sudo mkfs.ext4 $(readlink -f $emmc-part2); then
-   error_exit "ERROR: Could not mkfs.ext4"
+  if [ "$format" == "1" ]; then
+    echo "Formatting new partitions on $emmc..."
+    if ! sudo mkfs.vfat -F 32 $(readlink -f $emmc-part1); then
+      error_exit "ERROR: Could not mkfs.vfat"
+    fi
+    if ! sudo mkfs.ext4 $(readlink -f $emmc-part2); then
+      error_exit "ERROR: Could not mkfs.ext4"
+    fi
   fi
 
   echo "Adding tmp directories for mounting vfat and ext4..."
@@ -371,9 +408,11 @@ install_on_emmc() {
     error_exit "ERROR: Could not copy files to VFAT"
   fi
 
-  echo "Untarring root file system to $ext4..."
-  if ! sudo tar zxf $rootfs -C $ext4; then
-    error_exit "ERROR: Untarring failed for $rootfs"
+  if [ "$untar" == "1" ]; then
+    echo "Untarring root file system to $ext4..."
+    if ! sudo tar zxf $rootfs -C $ext4; then
+      error_exit "ERROR: Untarring failed for $rootfs"
+    fi
   fi
 
   echo "Syncing, unmounting and cleaning up tmp directories..."
