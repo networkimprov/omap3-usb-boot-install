@@ -212,34 +212,26 @@ append_image() {
   file="$1"
   pad_size="$2"
 
-  if [ ! -f $file ]; then
+  if [ ! -f "$file" ]; then
     echo "WARNING: file $file missing, creating empty $file"
-    touch $file
+    touch "$file"
   fi
 
   size=$(du -b "$file" | cut -f 1)
-  if [ $size -gt $pad_size ]; then
+  if [ "$size" -gt "$pad_size" ]; then
     error_exit "ERROR: $file too big"
   fi
 
-  if ! tmp=$(mktemp); then
-    error_exit "ERROR: could not create tmp padded file"
-  fi
+  imgsize=$(du -b "$install_image" | cut -f 1)
+  let imgsize+=pad_size
 
-  if ! cp $file $tmp; then
-    error_exit "ERROR: could not copy $file for padding"
-  fi
-
-  #echo "Padding $tmp ($file) from $size to $pad_size"
-  if ! truncate -s $pad_size $tmp; then
-    error_exit "ERROR: truncate failed for $tmp"
-  fi
-
-  if ! cat $tmp >> $install_image; then
+  if ! cat "$file" >> "$install_image"; then
     error_exit "ERROR: could not add $file to $install_image"
   fi
 
-  rm -f $tmp
+  if ! truncate -s "$imgsize" "$install_image"; then
+    error_exit "ERROR: truncate failed for $file"
+  fi
 }
 
 generate_install_image() {
