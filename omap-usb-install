@@ -31,16 +31,16 @@ tests=0
 install=0
 install_image=""
 dieid=""
-rootfs_file=""
+rootfs_file="" # user input
 
 main() {
   check_options $@
 
-  #cd $(dirname $0) # ? in case run from outside home dir
+  cd $(dirname $0)
 
   if [ "$update" == "1" ]; then
-    echo "Update cold flash images..."
-    update_images
+    echo "Update cold flash scripts..."
+    update_scripts
   fi
 
   generate_install_image
@@ -62,7 +62,7 @@ main() {
       fi
 
       disk="/dev/disk/by-id/usb-Linux_File-Stor_Gadget_"$dieid"-0:0"
-      uart="/dev/serial/by-id/usb-Anvl_Multi_Gadget_"$dieid"-if02" # usb-Anvl_Multi_Gadget
+      uart="/dev/serial/by-id/usb-Anvl_Multi_Gadget_"$dieid"-if02"
 
       wait_for_emmc $disk
 
@@ -86,11 +86,11 @@ main() {
       if [ "$rootfs_file" == "" ]; then
         echo "WARNING: No rootfs specified, assuming manual install"
       else
-        if [ "$rootfs_file" != "initramfs" ] && [ ! -f $rootfs_file ]; then
+        if [ "$rootfs_file" != "initramfs" ] && [ ! -f "$rootfs_file" ]; then
           error_exit "ERROR: Could not find file (or absolute path) for rootfs $rootfs_file"
         fi
 
-        install_on_emmc $dieid $disk $rootfs_file
+        install_on_emmc $dieid $disk
 
         serial_run_shell_script $uart scripts/led_blink_green.sh 0
       fi
@@ -115,10 +115,7 @@ options_exit() {
 }
 
 error_exit() {
-  if [ -f $install_image ]; then
-    echo "Removing temporary install image..."
-    rm -f $install_image
-  fi
+  test -f $install_image && rm -f $install_image
   echo $1
   exit 1
 }
@@ -186,7 +183,6 @@ cold_flash() {
     esac
   fi
 
-  #instead of after done: sudo $prefix/usbboot $prefix/omap3_aboot $image 2>&1 |
   while read -r output; do
     echo $output
     if echo $output | grep "No such file or directory" > /dev/null; then
@@ -222,20 +218,19 @@ append_image() {
     error_exit "ERROR: $file too big"
   fi
 
-  imgsize=$(du -b "$install_image" | cut -f 1)
+  imgsize=$(du -b $install_image | cut -f 1)
   let imgsize+=pad_size
 
-  if ! cat "$file" >> "$install_image"; then
+  if ! cat "$file" >> $install_image; then
     error_exit "ERROR: could not add $file to $install_image"
   fi
 
-  if ! truncate -s "$imgsize" "$install_image"; then
+  if ! truncate -s $imgsize $install_image; then
     error_exit "ERROR: truncate failed for $file"
   fi
 }
 
 generate_install_image() {
-
   if ! install_image=$(mktemp); then
     error_exit "ERROR: Could not create install image file"
   fi
@@ -261,8 +256,7 @@ generate_install_image() {
   append_image images/initramfs $SZ_20M      # at 0x80c08000
 }
 
-update_images() {
-
+update_scripts() {
   if ! mkimage -A arm -T script -C none -n "Install script" -d src/scripts/boot.script images/boot.scr; then
     error_exit "ERRROR: could not mkimage install script"
   fi
@@ -283,7 +277,7 @@ wait_for_emmc() {
   timeout=45
   echo "Waiting for mass storage device $emmc"
   while [ ! -b $emmc ]; do
-    ((timeout--))
+    let timeout--
     if [ "$timeout" -lt "1" ]; then
       error_exit "ERROR: Timed out waiting for $emmc"
     fi
@@ -315,7 +309,6 @@ serial_run_shell_script() {
     error_exit "Could not find script $test_script"
   fi
 
-  #instead of after done: cat $test_script | sudo socat - $uart,ispeed=115200,ospeed=9600,raw,echo=0 2>&1 |
   while read -r output; do
     if [ "$verbose" == "1" ]; then
       echo $output
@@ -336,7 +329,6 @@ serial_run_shell_script() {
 install_on_emmc() {
   dieid=$1
   emmc=$2
-  rootfs=$3
 
   if [ "$rootfs_file" == "initramfs" ]; then
     partition=0
@@ -370,10 +362,10 @@ install_on_emmc() {
 
   if [ "$format" == "1" ]; then
     echo "Formatting new partitions on $emmc..."
-    if ! sudo mkfs.vfat -F 32 $(readlink -f $emmc-part1); then
+    if ! sudo mkfs.vfat -F 32 $(readlink -f $emmc-part1) > /dev/null; then
       error_exit "ERROR: Could not mkfs.vfat"
     fi
-    if ! sudo mkfs.ext4 $(readlink -f $emmc-part2); then
+    if ! sudo mkfs.ext4 $(readlink -f $emmc-part2) > /dev/null; then
       error_exit "ERROR: Could not mkfs.ext4"
     fi
   fi
@@ -395,15 +387,14 @@ install_on_emmc() {
   echo "Mounted ext4 to temporary location $ext4"
 
   echo "Populating VFAT partition with u-boot, kernel and initramfs..."
-  if ! sudo cp images/MLO images/u-boot.img images/u-boot.bin images/uEnv.txt \
-      images/dtb images/zimage images/initramfs $vfat/; then
+  if ! sudo cp images/{MLO,u-boot.img,u-boot.bin,uEnv.txt,dtb,zimage,initramfs} $vfat/; then
     error_exit "ERROR: Could not copy files to VFAT"
   fi
 
   if [ "$untar" == "1" ]; then
     echo "Untarring root file system to $ext4..."
-    if ! sudo tar zxf $rootfs -C $ext4; then
-      error_exit "ERROR: Untarring failed for $rootfs"
+    if ! sudo tar zxf "$rootfs_file" -C $ext4; then
+      error_exit "ERROR: Untarring failed for $rootfs_file"
     fi
   fi
 
