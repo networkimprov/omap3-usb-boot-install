@@ -62,7 +62,7 @@ main() {
       fi
 
       disk="/dev/disk/by-id/usb-Linux_File-Stor_Gadget_"$dieid"-0:0"
-      uart="/dev/serial/by-id/usb-Network_Improv_Multi_Gadget_"$dieid"-if02" # usb-Anvl_Multi_Gadget
+      uart="/dev/serial/by-id/usb-Anvl_Multi_Gadget_"$dieid"-if02" # usb-Anvl_Multi_Gadget
 
       wait_for_emmc $disk
 
