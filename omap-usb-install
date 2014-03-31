@@ -284,8 +284,6 @@ wait_for_emmc() {
     sleep 1
   done
 
-  echo "Found mass storage at $emmc"
-
   return 0
 }
 
@@ -365,22 +363,22 @@ install_on_emmc() {
     if ! sudo mkfs.vfat -F 32 $(readlink -f $emmc-part1) > /dev/null; then
       error_exit "ERROR: Could not mkfs.vfat"
     fi
-    if ! sudo mkfs.ext4 $(readlink -f $emmc-part2) > /dev/null; then
+    if ! sudo mkfs.ext4 -q $(readlink -f $emmc-part2); then
       error_exit "ERROR: Could not mkfs.ext4"
     fi
   fi
 
-  echo "Adding tmp directories for mounting vfat and ext4..."
   if ! vfat=$(mktemp -d /tmp/$dieid-vfat-XXXXXXXX); then
     error_exit "ERROR: Could not mktemp for vfat"
-  fi
-  if ! ext4=$(mktemp -d /tmp/$dieid-ext4-XXXXXXXX); then
-    error_exit "ERROR: Could not mktemp for ext4"
   fi
   if ! sudo mount $emmc-part1 $vfat; then
     error_exit "ERROR: Could not mount vfat"
   fi
   echo "Mounted vfat to temporary location $vfat"
+
+  if ! ext4=$(mktemp -d /tmp/$dieid-ext4-XXXXXXXX); then
+    error_exit "ERROR: Could not mktemp for ext4"
+  fi
   if ! sudo mount $emmc-part2 $ext4; then
     error_exit "ERROR: Could not mount ext4"
   fi
