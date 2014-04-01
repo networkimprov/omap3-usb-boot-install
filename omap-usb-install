@@ -354,9 +354,10 @@ install_on_emmc() {
     fi
   fi
 
-  sleep 2 # let possible automount finish
+  sleep 3 # let possible automount finish
   test -b $emmc-part1 && sudo umount $emmc-part1
   test -b $emmc-part2 && sudo umount $emmc-part2
+  sleep 3
 
   if [ "$format" == "1" ]; then
     echo "Formatting new partitions on $emmc..."
@@ -391,7 +392,7 @@ install_on_emmc() {
 
   if [ "$untar" == "1" ]; then
     echo "Untarring root file system to $ext4..."
-    if ! sudo tar zxf "$rootfs_file" -C $ext4; then
+    if sudo tar zxf "$rootfs_file" -C $ext4 2>&1 | tee /dev/stderr | grep -q ': Cannot '; then
       error_exit "ERROR: Untarring failed for $rootfs_file"
     fi
   fi
