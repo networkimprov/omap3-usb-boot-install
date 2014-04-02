@@ -1,5 +1,12 @@
 echo Erasing NAND
 nand erase.chip
 
+echo Erasing eMMC
+mw 80200000 0 1024
+mmc dev 1
+mmc write 80200000 0 2
+
 echo Resetting install script header in memory
 mw 80188000 0 8
+
+reset
