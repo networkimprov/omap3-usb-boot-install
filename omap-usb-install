@@ -64,7 +64,7 @@ main() {
       disk="/dev/disk/by-id/usb-Linux_File-Stor_Gadget_"$dieid"-0:0"
       uart="/dev/serial/by-id/usb-Anvl_Multi_Gadget_"$dieid"-if02"
 
-      wait_for_emmc $disk
+      wait_for_device 45 b $disk
 
       echo "Debug UART at $uart"
 
@@ -73,7 +73,7 @@ main() {
           error_exit "ERROR: Could not find UART $uart"
         fi
         echo "Running test scripts.."
-        if ! serial_run_shell_script $uart scripts/led_blink_yellow.sh 0; then
+        if ! serial_run_shell_script $uart scripts/led_colors.sh 1; then
           if [ "$loop" == "1" ]; then
             echo "Set aside this device for repair, and connect the next device"
             continue
@@ -92,7 +92,11 @@ main() {
 
         install_on_emmc $dieid $disk
 
-        serial_run_shell_script $uart scripts/led_blink_green.sh 0
+        serial_run_shell_script $uart scripts/reboot.sh 0
+
+        uart="/dev/serial/by-id/usb-Anvl_Multi_Gadget-if02"
+        wait_for_device 60 c $uart
+        serial_run_shell_script $uart scripts/post_reboot.sh 1
       fi
     fi
 
@@ -272,14 +276,15 @@ update_scripts() {
   return 0
 }
 
-wait_for_emmc() {
-  emmc=$1
-  timeout=45
-  echo "Waiting for mass storage device $emmc"
-  while [ ! -b $emmc ]; do
+wait_for_device() {
+  timeout=$1
+  type=$2
+  path=$3
+  echo "Waiting for device $path"
+  while [ ! -$type $path ]; do
     let timeout--
     if [ "$timeout" -lt "1" ]; then
-      error_exit "ERROR: Timed out waiting for $emmc"
+      error_exit "ERROR: Timed out waiting for $path"
     fi
     sleep 1
   done
