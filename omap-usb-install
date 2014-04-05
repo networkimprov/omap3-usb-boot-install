@@ -68,12 +68,27 @@ main() {
 
       echo "Debug UART at $uart"
 
+      if [ "$rootfs_file" == "" ]; then
+        echo "WARNING: No rootfs specified, assuming manual install"
+      else
+        if [ "$rootfs_file" != "initramfs" ] && [ ! -f "$rootfs_file" ]; then
+          error_exit "ERROR: Could not find file (or absolute path) for rootfs $rootfs_file"
+        fi
+        install_on_emmc $dieid $disk
+      fi
+
       if [ "$tests" == "1" ]; then
         if [ ! -c $uart ]; then
           error_exit "ERROR: Could not find UART $uart"
         fi
-        echo "Running test scripts.."
-        if ! serial_run_shell_script $uart scripts/led_colors.sh 1; then
+        echo "Rebooting..."
+        echo "reboot -f" > $uart
+        wait_for_device 60 c "/dev/serial/by-id/usb-Anvl_Multi_Gadget-if02" # look for network device?
+
+        while ! ifconfig usb0 | grep -q RUNNING; do sleep 1; done
+        sudo ifconfig usb0 192.168.99.1/30 up # move to host config
+        echo "Running test scripts..."
+        if ! ssh root@192.168.99.2 < scripts/led_colors.sh; then
           if [ "$loop" == "1" ]; then
             echo "Set aside this device for repair, and connect the next device"
             continue
@@ -81,22 +96,6 @@ main() {
             break
           fi
         fi
-      fi
-
-      if [ "$rootfs_file" == "" ]; then
-        echo "WARNING: No rootfs specified, assuming manual install"
-      else
-        if [ "$rootfs_file" != "initramfs" ] && [ ! -f "$rootfs_file" ]; then
-          error_exit "ERROR: Could not find file (or absolute path) for rootfs $rootfs_file"
-        fi
-
-        install_on_emmc $dieid $disk
-
-        serial_run_shell_script $uart scripts/reboot.sh 0
-
-        uart="/dev/serial/by-id/usb-Anvl_Multi_Gadget-if02"
-        wait_for_device 60 c $uart
-        serial_run_shell_script $uart scripts/post_reboot.sh 1
       fi
     fi
 
@@ -280,7 +279,7 @@ wait_for_device() {
   timeout=$1
   type=$2
   path=$3
-  echo "Waiting for device $path"
+  echo "Waiting for device $path..."
   while [ ! -$type $path ]; do
     let timeout--
     if [ "$timeout" -lt "1" ]; then
@@ -400,6 +399,7 @@ install_on_emmc() {
     if sudo tar zxf "$rootfs_file" -C $ext4 2>&1 | tee /dev/stderr | grep -q ': Cannot '; then
       error_exit "ERROR: Untarring failed for $rootfs_file"
     fi
+    sudo bash -c "echo ifconfig usb1 192.168.99.2/30 up >> $ext4/usr/local/bin/omap-idle.sh" # until rootfs updated
   fi
 
   echo "Syncing, unmounting and cleaning up tmp directories..."
