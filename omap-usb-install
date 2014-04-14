@@ -186,9 +186,19 @@ cold_flash() {
     esac
   fi
 
-  if ! sudo $prefix/usbboot $prefix/omap3_aboot $image 2>&1; then
-    error_exit "ERROR: usbboot failed"
-  fi
+  while read -r output; do
+    echo $output
+    if echo $output | grep "No such file or directory" > /dev/null; then
+      exit 2
+    fi 
+    if echo $output | grep "command not found" > /dev/null; then
+      exit 3
+    fi 
+    if echo $output | grep "unexpected 2ndstage response" > /dev/null; then
+      exit 4
+    fi 
+    dieid=$(echo $output | awk '{ split($0,a,"dieid: "); print substr(a[2], 1, 32) }')
+  done < <(sudo $prefix/usbboot $prefix/omap3_aboot $image 2>&1)
 
   if [ "$dieid" = "" ]; then
     error_exit "ERROR: failed to get dieid"
