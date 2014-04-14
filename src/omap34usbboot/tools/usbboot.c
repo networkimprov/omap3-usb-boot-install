@@ -30,11 +30,14 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include <sys/time.h>
 #include <stdint.h>
 #include <fcntl.h>
 #include <string.h>
 
 #include "usb.h"
+
+#define TIMEOUT	30	/* In seconds */
 
 typedef struct tocentry {
 	unsigned offset;
@@ -243,6 +246,7 @@ extern void _binary_out_omap3_aboot_bin_end;
 
 int main(int argc, char **argv)
 {
+	struct timeval start, now;
 	void *data, *data2;
 	unsigned sz, sz2;
 	usb_handle *usb;
@@ -277,8 +281,15 @@ int main(int argc, char **argv)
 		return -1;
 	}
 
+	gettimeofday(&start, NULL);
 	for (;;) {
 		int res;
+
+		gettimeofday(&now, NULL);
+		if ((now.tv_sec  - start.tv_sec) > TIMEOUT) {
+			fprintf(stderr, "timeout waiting for device\n");
+			return  -1;
+		}
 
 		usb = usb_open(match_omap4_bootloader);
 		if (usb)
