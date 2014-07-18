@@ -10,7 +10,9 @@ fi
 
 mkdir rootfs
 
-pacstrap -di rootfs base wpa_supplicant openssh
+# TODO add archlinux-anvl repository to pacman.conf
+
+pacstrap -di rootfs base wpa_supplicant openssh omap-idle
 
 pushd rootfs
 
@@ -21,6 +23,9 @@ echo "ttyGS0" >> etc/securetty
 
 # enable ssh
 ln -s /usr/lib/systemd/system/sshd.service etc/systemd/system/multi-user.target.wants/sshd.service
+
+# enable omap-idle
+ln -s /etc/systemd/system/omap-idle.service etc/systemd/system/multi-user.target.wants/omap-idle.service
 
 tar cf ../rootfs.tar *
 
