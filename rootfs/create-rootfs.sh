@@ -51,24 +51,26 @@ if [[ ${UID} -ne 0 ]]; then
     exit 1
 fi
 
-mkdir rootfs
+DIR="$(dirname ${0})"
 
-pacstrap -C pacman.conf -d rootfs base wpa_supplicant openssh \
+mkdir "${DIR}/rootfs"
+
+pacstrap -C pacman.conf -d "${DIR}/rootfs" base wpa_supplicant openssh \
   sqlite samba graphicsmagick xdelta3 xapian-core chrony base-devel \
   traceroute dialog \
   omap-idle nodejs nodejs-inotify pacmatic
 
 # override standard pacman with pacman.conf modified for our repository
-cp pacman.conf rootfs/etc/pacman.conf
+cp pacman.conf "${DIR}/rootfs/etc/"
 
-cp configure-rootfs.sh rootfs
+cp configure-rootfs.sh "${DIR}/rootfs/"
 
-arch-chroot rootfs /configure-rootfs.sh -p ${config_password} -H ${config_hostname}
+arch-chroot "${DIR}/rootfs" /configure-rootfs.sh -p ${config_password} -H ${config_hostname}
 
-rm rootfs/configure-rootfs.sh
+rm "${DIR}/rootfs/configure-rootfs.sh"
 
-pushd rootfs
+pushd "${DIR}/rootfs"
 
-tar cf ../rootfs.tar *
+tar cf "${DIR}/../rootfs.tar" *
 
 popd
