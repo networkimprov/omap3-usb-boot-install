@@ -11,3 +11,10 @@ echo "ttyO2" >> etc/securetty
 systemctl enable sshd
 
 systemctl enable omap-idle
+
+systemctl enable chrony
+
+# enable samba
+systemctl enable samba
+systemctl enable nmbd
+systemctl enable smbd.socket
