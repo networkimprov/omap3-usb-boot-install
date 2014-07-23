@@ -22,6 +22,8 @@ cp configure-rootfs.sh rootfs
 
 arch-chroot rootfs /configure-rootfs.sh
 
+rm rootfs/configure-rootfs.sh
+
 pushd rootfs
 
 tar cf ../rootfs.tar *
