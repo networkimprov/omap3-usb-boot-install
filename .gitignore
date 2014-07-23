@@ -5,4 +5,4 @@
 *~
 src/omap34usbboot/out/
 rootfs/rootfs/
-rootfs.tar
+*.tar
