@@ -3,8 +3,22 @@
 # exit immediately when a command returns a nonzero
 set -e
 
-PASSWORD='pocketanvl'
-HOSTNAME='anvl'
+while getopts ':p:H:' flag; do
+  case ${flag} in
+    p)
+      config_password="${OPTARG}"
+      ;;
+    H)
+      config_hostname="${OPTARG}"
+      ;;
+    :)
+      die '%s: option requires an argument: '\''%s'\' "${0##*/}" "${OPTARG}"
+      ;;
+    ?)
+      die '%s: invalid option: '\''%s'\' "${0##*/}" "${OPTARG}"
+      ;;
+  esac
+done
 
 # enable logging in through serial
 systemctl enable getty@ttyGS0
@@ -23,8 +37,8 @@ systemctl enable nmbd
 systemctl enable smbd.socket
 
 # change root password
-echo "root:${PASSWORD}" | chpasswd
+echo "root:${config_password}" | chpasswd
 
 # change the hostname
-echo ${HOSTNAME} > /etc/hostname
-sed -i "s/^127.0.0.1.*/& ${HOSTNAME}/" /etc/hosts
+echo ${config_hostname} > /etc/hostname
+sed -i "s/^127.0.0.1.*/& ${config_hostname}/" /etc/hosts
