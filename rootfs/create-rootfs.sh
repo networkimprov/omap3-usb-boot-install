@@ -55,7 +55,7 @@ DIR="$(dirname ${0})"
 
 mkdir "${DIR}/rootfs"
 
-pacstrap -C pacman.conf -d "${DIR}/rootfs" base wpa_supplicant openssh \
+pacstrap -C "${DIR}/pacman.conf" -d "${DIR}/rootfs" base wpa_supplicant openssh \
   sqlite samba graphicsmagick xdelta3 xapian-core chrony base-devel \
   traceroute dialog \
   omap-idle nodejs nodejs-inotify pacmatic
