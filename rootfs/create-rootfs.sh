@@ -68,5 +68,5 @@ arch-chroot "${DIR}/rootfs" /configure-rootfs.sh -p ${config_password} -H ${conf
 rm "${DIR}/rootfs/configure-rootfs.sh"
 
 pushd "${DIR}/rootfs"
-tar cf "${DIR}/../rootfs.tar" *
+tar cf "${DIR}/../rootfs-$(date +%Y-%m-%d-%H:%M).tar" *
 popd
