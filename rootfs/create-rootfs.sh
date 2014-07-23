@@ -54,9 +54,9 @@ fi
 mkdir rootfs
 
 pacstrap -C pacman.conf -d rootfs base wpa_supplicant openssh \
-  sqlite samba graphicsmagick xdelta3 xapian-core chrony \
+  sqlite samba graphicsmagick xdelta3 xapian-core chrony base-devel \
   traceroute dialog \
-  omap-idle \
+  omap-idle nodejs nodejs-inotify pacmatic
 
 # override standard pacman with pacman.conf modified for our repository
 cp pacman.conf rootfs/etc/pacman.conf
