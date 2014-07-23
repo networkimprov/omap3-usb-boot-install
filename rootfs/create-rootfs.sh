@@ -12,7 +12,7 @@ mkdir rootfs
 
 # TODO add archlinux-anvl repository to pacman.conf
 
-pacstrap -di rootfs base wpa_supplicant openssh omap-idle
+pacstrap -C pacman.conf -d -i rootfs base wpa_supplicant openssh omap-idle
 
 pushd rootfs
 
