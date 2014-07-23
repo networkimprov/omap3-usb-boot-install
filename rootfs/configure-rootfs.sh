@@ -18,3 +18,6 @@ systemctl enable chrony
 systemctl enable samba
 systemctl enable nmbd
 systemctl enable smbd.socket
+
+# change root password
+echo 'root:pocketanvl' | chpasswd
