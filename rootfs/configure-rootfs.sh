@@ -4,7 +4,7 @@
 set -e
 
 # enable logging in through serial
-ln -s /lib/systemd/system/getty@service etc/systemd/system/getty.target.wants/getty@ttyGS0.service
+systemctl enable getty@ttyGS0
 echo "ttyGS0" >> etc/securetty
 echo "ttyO2" >> etc/securetty
 
