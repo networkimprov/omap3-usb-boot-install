@@ -19,7 +19,7 @@ pushd rootfs
 # enable logging in through serial
 ln -s /lib/systemd/system/getty@service etc/systemd/system/getty.target.wants/getty@ttyGS0.service
 echo "ttyGS0" >> etc/securetty
-echo "ttyGS0" >> etc/securetty
+echo "ttyO2" >> etc/securetty
 
 # enable ssh
 ln -s /usr/lib/systemd/system/sshd.service etc/systemd/system/multi-user.target.wants/sshd.service
