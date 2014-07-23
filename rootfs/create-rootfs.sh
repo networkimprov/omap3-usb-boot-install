@@ -64,13 +64,9 @@ pacstrap -C pacman.conf -d "${DIR}/rootfs" base wpa_supplicant openssh \
 cp pacman.conf "${DIR}/rootfs/etc/"
 
 cp configure-rootfs.sh "${DIR}/rootfs/"
-
 arch-chroot "${DIR}/rootfs" /configure-rootfs.sh -p ${config_password} -H ${config_hostname}
-
 rm "${DIR}/rootfs/configure-rootfs.sh"
 
 pushd "${DIR}/rootfs"
-
 tar cf "${DIR}/../rootfs.tar" *
-
 popd
