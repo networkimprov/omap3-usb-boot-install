@@ -54,7 +54,6 @@ fi
 DIR="$(dirname ${0})"
 ROOTFS="/var/tmp/rootfs"
 
-rm -rf "${ROOTFS}"
 mkdir "${ROOTFS}"
 
 pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" base wpa_supplicant openssh \
@@ -70,5 +69,7 @@ arch-chroot "${ROOTFS}" /configure-rootfs.sh -p ${config_password} -H ${config_h
 rm "${ROOTFS}/configure-rootfs.sh"
 
 pushd "${ROOTFS}"
-tar cf "../rootfs-$(date +%Y-%m-%d-%H:%M).tar" *
+tar cf "${DIR}/rootfs-$(date +%Y-%m-%d-%H:%M).tar" *
 popd
+
+rm -rf "${ROOTFS}"
