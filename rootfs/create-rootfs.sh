@@ -52,21 +52,23 @@ if [[ ${UID} -ne 0 ]]; then
 fi
 
 DIR="$(dirname ${0})"
+ROOTFS="/var/tmp/rootfs"
 
-mkdir "${DIR}/rootfs"
+rm -rf "${ROOTFS}"
+mkdir "${ROOTFS}"
 
-pacstrap -C "${DIR}/pacman.conf" -d "${DIR}/rootfs" base wpa_supplicant openssh \
+pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" base wpa_supplicant openssh \
   sqlite samba graphicsmagick xdelta3 xapian-core chrony base-devel \
   traceroute dialog \
   omap-idle nodejs nodejs-inotify pacmatic
 
 # override standard pacman with pacman.conf modified for our repository
-cp pacman.conf "${DIR}/rootfs/etc/"
+cp "${DIR}/pacman.conf" "${ROOTFS}/etc/"
 
-cp configure-rootfs.sh "${DIR}/rootfs/"
-arch-chroot "${DIR}/rootfs" /configure-rootfs.sh -p ${config_password} -H ${config_hostname}
-rm "${DIR}/rootfs/configure-rootfs.sh"
+cp "${DIR}/configure-rootfs.sh" "${ROOTFS}/"
+arch-chroot "${ROOTFS}" /configure-rootfs.sh -p ${config_password} -H ${config_hostname}
+rm "${ROOTFS}/configure-rootfs.sh"
 
-pushd "${DIR}/rootfs"
-tar cf "${DIR}/../rootfs-$(date +%Y-%m-%d-%H:%M).tar" *
+pushd "${ROOTFS}"
+tar cf "../rootfs-$(date +%Y-%m-%d-%H:%M).tar" *
 popd
