@@ -51,12 +51,14 @@ if [[ ${UID} -ne 0 ]]; then
     exit 1
 fi
 
-DIR="$(dirname ${0})"
+# get the absolute path to the script
+DIR="$(dirname $(realpath ${0}))"
 ROOTFS="/var/tmp/rootfs"
 
+rm -rf "${ROOTFS}"
 mkdir "${ROOTFS}"
 
-pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" base wpa_supplicant openssh \
+pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" base networkmanager openssh \
   sqlite samba graphicsmagick xdelta3 xapian-core chrony base-devel \
   traceroute dialog \
   omap-idle nodejs nodejs-inotify pacmatic alsa-utils
@@ -67,6 +69,10 @@ cp "${DIR}/pacman.conf" "${ROOTFS}/etc/"
 cp "${DIR}/configure-rootfs.sh" "${ROOTFS}/"
 arch-chroot "${ROOTFS}" /configure-rootfs.sh -p ${config_password} -H ${config_hostname}
 rm "${ROOTFS}/configure-rootfs.sh"
+
+# install default configuration for network manager
+# ethernet over usb
+cp "${DIR}/ethernet-usb1" "${ROOTFS}/etc/NetworkManager/system-connections/"
 
 pushd "${ROOTFS}"
 tar cf "${DIR}/rootfs-$(date +%Y-%m-%d-%H:%M).tar" *
