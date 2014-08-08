@@ -1,9 +1,0 @@
-[connection]
-id=ethernet-usb1
-uuid=1b941c19-a7c0-4d13-97d4-1532da0f3159
-interface-name=usb1
-type=ethernet
-
-[ipv4]
-method=manual
-address1=192.168.99.2/30

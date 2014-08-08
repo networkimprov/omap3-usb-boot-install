@@ -25,7 +25,7 @@ systemctl enable getty@ttyGS0
 echo "ttyGS0" >> etc/securetty
 echo "ttyO2" >> etc/securetty
 
-systemctl enable NetworkManager
+netctl enable ethernet-usb
 
 systemctl enable sshd
 

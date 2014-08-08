@@ -58,21 +58,21 @@ ROOTFS="/var/tmp/rootfs"
 rm -rf "${ROOTFS}"
 mkdir "${ROOTFS}"
 
-pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" base networkmanager openssh \
+pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" base wpa_supplicant openssh \
   sqlite samba graphicsmagick xdelta3 xapian-core chrony base-devel \
   traceroute dialog \
-  omap-idle nodejs nodejs-inotify pacmatic alsa-utils
+  omap-idle nodejs nodejs-inotify pacmatic alsa-utils udhcp
 
 # override standard pacman with pacman.conf modified for our repository
 cp "${DIR}/pacman.conf" "${ROOTFS}/etc/"
 
+# install default configuration for netctl
+# ethernet over usb
+cp "${DIR}/ethernet-usb" "${ROOTFS}/etc/netctl/"
+
 cp "${DIR}/configure-rootfs.sh" "${ROOTFS}/"
 arch-chroot "${ROOTFS}" /configure-rootfs.sh -p ${config_password} -H ${config_hostname}
 rm "${ROOTFS}/configure-rootfs.sh"
-
-# install default configuration for network manager
-# ethernet over usb
-cp "${DIR}/ethernet-usb1" "${ROOTFS}/etc/NetworkManager/system-connections/"
 
 pushd "${ROOTFS}"
 tar cf "${DIR}/rootfs-$(date +%Y-%m-%d-%H:%M).tar" *
