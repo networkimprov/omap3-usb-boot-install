@@ -70,6 +70,9 @@ cp "${DIR}/pacman.conf" "${ROOTFS}/etc/"
 # ethernet over usb
 cp "${DIR}/ethernet-usb" "${ROOTFS}/etc/netctl/"
 
+# install config for udhcp
+cp "${DIR}/udhcpd.conf" "${ROOTFS}/etc/"
+
 cp "${DIR}/configure-rootfs.sh" "${ROOTFS}/"
 arch-chroot "${ROOTFS}" /configure-rootfs.sh -p ${config_password} -H ${config_hostname}
 rm "${ROOTFS}/configure-rootfs.sh"
