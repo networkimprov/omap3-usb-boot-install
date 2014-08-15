@@ -74,6 +74,12 @@ cp "${DIR}/ethernet-usb" "${ROOTFS}/etc/netctl/"
 # install config for udhcp
 cp "${DIR}/udhcpd.conf" "${ROOTFS}/etc/"
 
+cp "${DIR}/wpa_supplicant.conf" "${ROOTFS}/etc/netctl/"
+
+cp "${DIR}/enable_debug.sh" "${ROOTFS}/usr/bin/"
+
+cp "${DIR}/init_wifidirect.sh" "${ROOTFS}/usr/bin/"
+
 cp "${DIR}/configure-rootfs.sh" "${ROOTFS}/"
 arch-chroot "${ROOTFS}" /configure-rootfs.sh -p ${config_password} -H ${config_hostname}
 rm "${ROOTFS}/configure-rootfs.sh"
