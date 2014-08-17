@@ -71,6 +71,9 @@ cp "${DIR}/pacman.conf" "${ROOTFS}/etc/"
 # ethernet over usb
 cp "${DIR}/ethernet-usb" "${ROOTFS}/etc/netctl/"
 
+# install alsa sound state
+cp "${DIR}/asound.state" "${ROOTFS}/var/lib/alsa/"
+
 # install config for udhcp
 cp "${DIR}/udhcpd.conf" "${ROOTFS}/etc/"
 
