@@ -90,6 +90,10 @@ cp "${DIR}/configure-rootfs.sh" "${ROOTFS}/"
 arch-chroot "${ROOTFS}" /configure-rootfs.sh -p ${config_password} -H ${config_hostname}
 rm "${ROOTFS}/configure-rootfs.sh"
 
+# clean up package cache
+cp "${ROOTFS}/var/cache/pacman/pkg/"* /var/cache/pacman/pkg/
+rm "${ROOTFS}/var/cache/pacman/pkg/"*
+
 pushd "${ROOTFS}"
 tar cf "${DIR}/rootfs-$(date +%Y-%m-%d-%H:%M).tar" *
 popd
