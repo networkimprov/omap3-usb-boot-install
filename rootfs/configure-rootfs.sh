@@ -21,9 +21,9 @@ while getopts ':p:H:' flag; do
 done
 
 # enable logging in through serial
-systemctl enable getty@ttyGS0
 echo "ttyGS0" >> etc/securetty
 echo "ttyO2" >> etc/securetty
+echo "ttyS2" >> etc/securetty
 
 netctl enable ethernet-usb
 
@@ -39,6 +39,9 @@ systemctl enable nmbd
 systemctl enable smbd.socket
 
 systemctl enable watchdog
+
+systemctl enable anvl-getty
+systemctl enable anvl-usb
 
 # change root password
 echo "root:${config_password}" | chpasswd
