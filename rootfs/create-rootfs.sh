@@ -81,7 +81,7 @@ cp "${DIR}/wpa_supplicant.conf" "${ROOTFS}/etc/netctl/"
 
 cp "${DIR}/enable_debug.sh" "${ROOTFS}/usr/bin/"
 
-cp "${DIR}/init_wifidirect.sh" "${ROOTFS}/usr/bin/"
+cp "${DIR}/wifi-p2p_init.sh" "${ROOTFS}/usr/bin/"
 
 cp "${DIR}/configure-rootfs.sh" "${ROOTFS}/"
 arch-chroot "${ROOTFS}" /configure-rootfs.sh -p ${config_password} -H ${config_hostname}
