@@ -38,6 +38,8 @@ systemctl enable samba
 systemctl enable nmbd
 systemctl enable smbd.socket
 
+systemctl enable watchdog
+
 # change root password
 echo "root:${config_password}" | chpasswd
 

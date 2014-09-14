@@ -62,7 +62,7 @@ pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" base wpa_supplicant openssh \
   sqlite samba graphicsmagick xdelta3 xapian-core chrony base-devel \
   traceroute dialog \
   omap-idle pacmatic alsa-utils udhcp \
-  go sd8787_uapsta-fw linux-anvl
+  go sd8787_uapsta-fw linux-anvl watchdog
 
 # override standard pacman with pacman.conf modified for our repository
 cp "${DIR}/pacman.conf" "${ROOTFS}/etc/"
@@ -82,6 +82,9 @@ cp "${DIR}/wpa_supplicant.conf" "${ROOTFS}/etc/netctl/"
 cp "${DIR}/enable_debug.sh" "${ROOTFS}/usr/bin/"
 
 cp "${DIR}/wifi-p2p_init.sh" "${ROOTFS}/usr/bin/"
+
+# overwrite default watchdog config
+cp "${DIR}/watchdog.conf" "${ROOTFS}/etc/"
 
 cp "${DIR}/configure-rootfs.sh" "${ROOTFS}/"
 arch-chroot "${ROOTFS}" /configure-rootfs.sh -p ${config_password} -H ${config_hostname}
