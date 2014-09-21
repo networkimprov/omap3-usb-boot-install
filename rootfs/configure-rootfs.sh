@@ -20,11 +20,6 @@ while getopts ':p:H:' flag; do
   esac
 done
 
-# enable logging in through serial
-echo "ttyGS0" >> etc/securetty
-echo "ttyO2" >> etc/securetty
-echo "ttyS2" >> etc/securetty
-
 netctl enable ethernet-usb
 
 systemctl enable sshd
