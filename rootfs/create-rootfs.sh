@@ -60,7 +60,7 @@ mkdir "${ROOTFS}"
 
 pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" base wpa_supplicant openssh \
   sqlite samba graphicsmagick xdelta3 xapian-core chrony base-devel \
-  traceroute dialog \
+  traceroute dialog sudo \
   omap-idle pacmatic alsa-utils udhcp \
   go sd8787_uapsta-fw linux-anvl watchdog anvl-usb
 
