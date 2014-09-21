@@ -37,7 +37,6 @@ systemctl enable watchdog
 
 systemctl enable anvl-getty
 systemctl enable anvl-usb
-systemctl enable anvl-getty-usb@ttyGS0
 
 # change root password
 echo "root:${config_password}" | chpasswd
