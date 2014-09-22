@@ -47,3 +47,6 @@ sed -i "s/^127.0.0.1.*/& ${config_hostname}/" /etc/hosts
 
 useradd -m -G wheel -s /bin/bash self
 echo "self:${config_password}" | chpasswd
+
+# allow users in the wheel group to run sudo
+sed 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' -i /etc/sudoers
