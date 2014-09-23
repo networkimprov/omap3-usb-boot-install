@@ -20,6 +20,8 @@ while getopts ':p:H:' flag; do
   esac
 done
 
+nonroot=self
+
 netctl enable ethernet-usb
 
 systemctl enable sshd
@@ -46,7 +48,20 @@ echo ${config_hostname} > /etc/hostname
 sed -i "s/^127.0.0.1.*/& ${config_hostname}/" /etc/hosts
 
 useradd -m -G wheel -s /bin/bash self
-echo "self:${config_password}" | chpasswd
+echo "${nonroot}:${config_password}" | chpasswd
 
 # allow users in the wheel group to run sudo
 sed 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' -i /etc/sudoers
+
+# setup go workspace
+mkdir /home/${nonroot}/gopath
+
+echo '
+add_path() {
+  if [[ ! "$PATH" =~ (^|:)"$1"(:|$) ]]; then
+    export PATH="$PATH:$1"
+  fi
+}
+
+export GOPATH="$HOME/gopath"
+add_path "$HOME/gopath/bin"' >> /home/${nonroot}/.bashrc
