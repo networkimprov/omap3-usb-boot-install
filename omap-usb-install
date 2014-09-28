@@ -399,7 +399,6 @@ install_on_emmc() {
     if sudo tar zxf "$rootfs_file" -C $ext4 2>&1 | tee /dev/stderr | grep -q ': Cannot '; then
       error_exit "ERROR: Untarring failed for $rootfs_file"
     fi
-    sudo bash -c "echo ifconfig usb1 192.168.99.2/30 up >> $ext4/usr/local/bin/omap-idle.sh" # until rootfs updated
   fi
 
   echo "Syncing, unmounting and cleaning up tmp directories..."
