@@ -44,7 +44,7 @@ systemctl enable anvl-usb
 echo "root:${config_password}" | chpasswd
 
 # change the hostname
-echo ${config_hostname} > /etc/hostname
+echo "${config_hostname}" > /etc/hostname
 sed -i "s/^127.0.0.1.*/& ${config_hostname}/" /etc/hosts
 
 useradd -m -G wheel -s /bin/bash self

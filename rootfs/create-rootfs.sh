@@ -4,7 +4,7 @@
 set -e
 
 die() {
-  printf "${@}"
+  printf "%s" "${@}"
   echo
   exit 1
 }
@@ -52,7 +52,7 @@ if [[ ${UID} -ne 0 ]]; then
 fi
 
 # get the absolute path to the script
-DIR="$(dirname $(realpath ${0}))"
+DIR="$(dirname "$(realpath "${0}")")"
 ROOTFS="/var/tmp/rootfs"
 
 rm -rf "${ROOTFS}"
@@ -88,7 +88,7 @@ cp "${DIR}/wifi-p2p_init.sh" "${ROOTFS}/usr/bin/"
 cp "${DIR}/watchdog.conf" "${ROOTFS}/etc/"
 
 cp "${DIR}/configure-rootfs.sh" "${ROOTFS}/"
-arch-chroot "${ROOTFS}" /configure-rootfs.sh -p ${config_password} -H ${config_hostname}
+arch-chroot "${ROOTFS}" /configure-rootfs.sh -p "${config_password}" -H "${config_hostname}"
 rm "${ROOTFS}/configure-rootfs.sh"
 
 # clean up package cache
@@ -96,7 +96,7 @@ cp "${ROOTFS}/var/cache/pacman/pkg/"* /var/cache/pacman/pkg/
 rm "${ROOTFS}/var/cache/pacman/pkg/"*
 
 pushd "${ROOTFS}"
-tar cf "${DIR}/rootfs-$(date +%Y-%m-%d-%H:%M).tar" *
+tar cf "${DIR}/rootfs-$(date +%Y-%m-%d-%H:%M).tar" ./*
 popd
 
 rm -rf "${ROOTFS}"
