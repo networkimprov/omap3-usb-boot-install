@@ -13,6 +13,8 @@
 mount -t proc none /proc
 mount -t sysfs none /sys
 mount -t devtmpfs none /dev/
+mkdir /dev/pts
+mount -t devpts none /dev/pts
 
 #
 # Install busybox symlinks
@@ -213,6 +215,7 @@ else
 	mount $rootfs /mnt
 
 	echo "Unmounting temporary file systems..."
+	umount /dev/pts
 	umount /proc
 	umount /sys/kernel/config
 	umount /sys
