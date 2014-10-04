@@ -58,6 +58,9 @@ ROOTFS="/var/tmp/rootfs"
 rm -rf "${ROOTFS}"
 mkdir "${ROOTFS}"
 
+mkdir -p "${ROOTFS}/var/cache/pacman/pkg"
+cp /var/cache/pacman/pkg/* "${ROOTFS}/var/cache/pacman/pkg"
+
 pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" base wpa_supplicant openssh \
   sqlite samba graphicsmagick xdelta3 xapian-core chrony base-devel \
   traceroute dialog sudo \
