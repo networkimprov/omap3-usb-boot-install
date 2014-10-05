@@ -47,7 +47,7 @@ echo "root:${config_password}" | chpasswd
 echo "${config_hostname}" > /etc/hostname
 sed -i "s/^127.0.0.1.*/& ${config_hostname}/" /etc/hosts
 
-useradd -m -G wheel -s /bin/bash self
+useradd -m -G wheel -s /bin/bash ${nonroot}
 echo "${nonroot}:${config_password}" | chpasswd
 
 # allow users in the wheel group to run sudo
@@ -56,12 +56,13 @@ sed 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' -i /etc/sudoers
 # setup go workspace
 mkdir /home/${nonroot}/gopath
 
-echo '
+cat >> /home/${nonroot}/.bashrc << EOF
 add_path() {
-  if [[ ! "$PATH" =~ (^|:)"$1"(:|$) ]]; then
-    export PATH="$PATH:$1"
+  if [[ ! "\$PATH" =~ (^|:)"\$1"(:|$) ]]; then
+    export PATH="\$PATH:\$1"
   fi
 }
 
-export GOPATH="$HOME/gopath"
-add_path "$HOME/gopath/bin"' >> /home/${nonroot}/.bashrc
+export GOPATH="\$HOME/gopath"
+add_path "\$HOME/gopath/bin"
+EOF
