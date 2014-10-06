@@ -56,13 +56,13 @@ sed 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' -i /etc/sudoers
 # setup go workspace
 mkdir /home/${nonroot}/gopath
 
-cat >> /home/${nonroot}/.bashrc << EOF
+cat >> /home/${nonroot}/.bashrc << 'EOF'
 add_path() {
-  if [[ ! "\$PATH" =~ (^|:)"\$1"(:|$) ]]; then
-    export PATH="\$PATH:\$1"
+  if [[ ! "$PATH" =~ (^|:)"$1"(:|$) ]]; then
+    export PATH="$PATH:$1"
   fi
 }
 
-export GOPATH="\$HOME/gopath"
-add_path "\$HOME/gopath/bin"
+export GOPATH="$HOME/gopath"
+add_path "$HOME/gopath/bin"
 EOF
