@@ -66,3 +66,5 @@ add_path() {
 export GOPATH="$HOME/gopath"
 add_path "$HOME/gopath/bin"
 EOF
+
+GOPATH=/home/${nonroot}/gopath go get github.com/networkimprov/info-anvl
