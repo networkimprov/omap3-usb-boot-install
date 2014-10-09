@@ -99,7 +99,7 @@ cp "${ROOTFS}/var/cache/pacman/pkg/"* /var/cache/pacman/pkg/
 rm "${ROOTFS}/var/cache/pacman/pkg/"*
 
 pushd "${ROOTFS}"
-tar cf "${DIR}/rootfs-$(date +%Y-%m-%d-%H:%M).tar" ./*
+tar cf "${DIR}/rootfs-$(date +%Y-%m-%d-%H-%M).tar" ./*
 popd
 
 rm -rf "${ROOTFS}"
