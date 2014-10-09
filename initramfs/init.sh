@@ -186,18 +186,21 @@ check_block_device() {
 	done
 }
 
-if echo $@ | grep really_install > /dev/null 2>&1; then
-
-	omap_dieid=""
-
-	# Check the unique die ID so install knows which device to use
+#
+# Check the unique die ID so install knows which device to use
+#
+check_die_id() {
 	for arg in $(cat /proc/cmdline); do
 		if echo $arg | grep omap_dieid= > /dev/null; then
 			omap_dieid=$(echo $arg | sed -e s/omap_dieid=//)
 		fi
 		shift
 	done
+}
 
+if echo $@ | grep really_install > /dev/null 2>&1; then
+
+	check_die_id
 	start_usb $emmc $omap_dieid
 
 	echo "Waiting in install mode, console at ttyACM..."
@@ -210,9 +213,43 @@ if echo $@ | grep really_install > /dev/null 2>&1; then
 	while [ 1 ]; do
 		blink_leds
 	done
+elif echo $@ | grep recovery_install > /dev/null 2>&1; then
+	echo "Mounting $rootfs for recovery..."
+	if mount $rootfs /mnt; then
+
+		echo "Removing potentially broken anvl kernel on rootfs..."
+		rm -f /mnt/boot/vmlinuz-linux-anvl
+
+		echo "Removing potentially broken anvl dtb on rootfs..."
+		rm -f /mnt/boot/dtbs/anvl.dtb
+
+		echo "Installing initramfs kernel modules to rootfs..."
+		tar c /lib/modules | tar x -C /mnt/
+
+		echo "Installing initramfs firmware to rootfs..."
+		tar c /lib/firmware | tar x -C /mnt/
+
+		echo "Unmounting rootfs $rootfs..."
+		umount /mnt
+	else
+		echo "Could not mount rootfs"
+	fi
+
+	check_die_id
+	start_usb $emmc $omap_dieid
+
+	echo "Waiting in recovery install mode, console at ttyACM..."
+	/sbin/getty -n -l /bin/sh /dev/ttyGS0 115200 &
+	/sbin/getty -n -l /bin/sh /dev/ttyO2 115200 &
+
+	echo "Recovery shell, power cycle system when installer is done"
+	/bin/sh
 else
 	echo "Mounting $rootfs as new root..."
-	mount $rootfs /mnt
+	if ! mount $rootfs /mnt; then
+		echo "Could not mount rootfs, starting shell.."
+		/bin/sh
+	fi
 
 	echo "Unmounting temporary file systems..."
 	umount /dev/pts

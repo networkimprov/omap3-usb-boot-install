@@ -71,7 +71,8 @@ main() {
       if [ "$rootfs_file" == "" ]; then
         echo "WARNING: No rootfs specified, assuming manual install"
       else
-        if [ "$rootfs_file" != "initramfs" ] && [ ! -f "$rootfs_file" ]; then
+        if [ "$rootfs_file" != "initramfs" ] && [ "$rootfs_file" != "recovery" ] && 
+	    [ ! -f "$rootfs_file" ]; then
           error_exit "ERROR: Could not find file (or absolute path) for rootfs $rootfs_file"
         fi
         install_on_emmc $dieid $disk
@@ -113,7 +114,7 @@ main() {
 }
 
 options_exit() {
-  echo "usage: $0 [-u | --update] [-i | --install[=][rootfs.tar.gz | erase | kernel | initramfs]] [-t | --tests] [-l | --loop]"
+  echo "usage: $0 [-u | --update] [-i | --install[=][rootfs.tar.gz | erase | kernel | initramfs | recovery]] [-t | --tests] [-l | --loop]"
   exit 1
 }
 
@@ -250,6 +251,8 @@ generate_install_image() {
 
   if [ "$rootfs_file" == "kernel" ]; then
     append_image images/kernel.scr $SZ_512K  # at 0x80188000
+  elif [ "$rootfs_file" == "recovery" ]; then
+    append_image images/recovery.scr $SZ_512K  # at 0x80188000
   else
     append_image images/boot.scr $SZ_512K    # at 0x80188000
   fi
@@ -270,6 +273,10 @@ update_scripts() {
 
   if ! mkimage -A arm -T script -C none -n "Kernel boot script" -d src/scripts/kernel.script images/kernel.scr; then
     error_exit "ERRROR: could not mkimage kernel boot script"
+  fi
+
+  if ! mkimage -A arm -T script -C none -n "Recovery install script" -d src/scripts/recovery.script images/recovery.scr; then
+    error_exit "ERRROR: could not mkimage recovery install script"
   fi
 
   return 0
@@ -332,7 +339,7 @@ install_on_emmc() {
   dieid=$1
   emmc=$2
 
-  if [ "$rootfs_file" == "initramfs" ]; then
+  if [ "$rootfs_file" == "initramfs" ] || [ "$rootfs_file" == "recovery" ]; then
     partition=0
     format=0
     untar=0
