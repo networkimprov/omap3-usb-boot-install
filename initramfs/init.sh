@@ -240,8 +240,7 @@ elif echo $@ | grep recovery_install > /dev/null 2>&1; then
 
 	echo "Waiting in recovery install mode, console at ttyACM..."
 	/sbin/getty -n -l /bin/sh /dev/ttyGS0 115200 &
-	/sbin/getty -n -l /bin/sh /dev/ttyO2 115200 &
-
+	sleep 2
 	echo "Recovery shell, power cycle system when installer is done"
 	/bin/sh
 else
