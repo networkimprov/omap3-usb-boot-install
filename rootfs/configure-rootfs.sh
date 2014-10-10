@@ -40,6 +40,8 @@ systemctl enable watchdog
 systemctl enable anvl-getty
 systemctl enable anvl-usb
 
+systemctl enable fstrim.timer
+
 # change root password
 echo "root:${config_password}" | chpasswd
 
