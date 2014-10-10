@@ -66,7 +66,7 @@ pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" base wpa_supplicant openssh \
   traceroute dialog sudo \
   omap-idle pacmatic alsa-utils udhcp \
   go git mercurial \
-  sd8787_uapsta-fw linux-anvl watchdog anvl-usb
+  sd8787_uapsta-fw linux-anvl watchdog anvl-usb bash-completion
 
 # override standard pacman with pacman.conf modified for our repository
 cp "${DIR}/pacman.conf" "${ROOTFS}/etc/"
