@@ -1,5 +1,5 @@
 Description='Usb Networking'
-Interface=usb1
+Interface=usb0
 Connection=ethernet
 IP=static
 Address=('192.168.99.2/30')
