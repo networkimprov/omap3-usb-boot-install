@@ -79,6 +79,8 @@ cp "${DIR}/ethernet-usb" "${ROOTFS}/etc/netctl/"
 # install alsa sound state
 cp "${DIR}/asound.state" "${ROOTFS}/var/lib/alsa/"
 
+cp "${DIR}/smb.conf" "${ROOTFS}/etc/samba/"
+
 # install config for udhcp
 cp "${DIR}/udhcpd.conf" "${ROOTFS}/etc/"
 
