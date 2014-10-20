@@ -26,8 +26,6 @@ netctl enable ethernet-usb
 
 systemctl enable sshd
 
-systemctl enable omap-idle
-
 systemctl enable chrony
 
 # enable samba
@@ -38,6 +36,7 @@ systemctl enable watchdog
 
 systemctl enable anvl-getty
 systemctl enable anvl-usb
+systemctl enable omap-idle
 
 systemctl enable fstrim.timer
 

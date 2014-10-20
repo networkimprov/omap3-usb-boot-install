@@ -64,9 +64,9 @@ cp /var/cache/pacman/pkg/* "${ROOTFS}/var/cache/pacman/pkg"
 pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" base wpa_supplicant openssh \
   sqlite samba graphicsmagick xdelta3 xapian-core chrony base-devel \
   traceroute dialog sudo \
-  omap-idle pacmatic alsa-utils udhcp \
+  pacmatic alsa-utils udhcp \
   go git mercurial \
-  sd8787_uapsta-fw linux-anvl watchdog anvl-usb bash-completion \
+  sd8787_uapsta-fw linux-anvl watchdog anvl-util bash-completion \
   vim htop tmux
 
 # override standard pacman with pacman.conf modified for our repository
