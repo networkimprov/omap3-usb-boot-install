@@ -6,22 +6,24 @@ if nand device 0; then
 	echo Flashing MLO to NAND
 	nandecc hw
 	nand erase 0 80000
-	nand write 80088000 0 20000
-	nand write 80088000 20000 20000
-	nand write 80088000 40000 20000
-	nand write 80088000 60000 20000
+	nand write 80880000 0 20000
+	nand write 80880000 20000 20000
+	nand write 80880000 40000 20000
+	nand write 80880000 60000 20000
 
 	echo Flashing u-boot to NAND
 	nandecc hw
 	nand erase 80000 80000
-	nand write 80108000 80000 80000
+	nand write 80900000 80000 80000
 fi
 
 echo Resetting install script header in memory
-mw 80188000 0 8
+mw 80980000 0 8
 
 echo Loading kernel, DTB and initramfs
 setenv bootargs root=/dev/ram0 console=ttyO2,115200 recovery_install omap_dieid=${dieid#} debug earlyprintk
-fdt addr 80208000
+setenv fdt_high 8c000000
+setenv initrd_high ffffffff
+fdt addr 80a00000
 fdt resize
-bootz 80408000 80c08000:1400000 80208000
+bootz 80c00000 81400000:1400000 80a00000

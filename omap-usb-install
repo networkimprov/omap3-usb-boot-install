@@ -239,27 +239,27 @@ generate_install_image() {
     error_exit "ERROR: Could not create install image file"
   fi
 
-  append_image images/u-boot.bin $SZ_512K    # at 0x80008000
-  append_image images/MLO $SZ_512K           # at 0x80088000
-  append_image images/u-boot.img $SZ_512K    # at 0x80108000
+  append_image images/u-boot.bin $SZ_512K    # at 0x80800000
+  append_image images/MLO $SZ_512K           # at 0x80880000
+  append_image images/u-boot.img $SZ_512K    # at 0x80900000
 
   # One of these depending of the command line options
   if [ "$rootfs_file" == "erase" ]; then
-    append_image images/erase.scr $SZ_512K   # at 0x80188000
+    append_image images/erase.scr $SZ_512K   # at 0x80980000
     return 0
   fi
 
   if [ "$rootfs_file" == "kernel" ]; then
-    append_image images/kernel.scr $SZ_512K  # at 0x80188000
+    append_image images/kernel.scr $SZ_512K  # at 0x80980000
   elif [ "$rootfs_file" == "recovery" ]; then
-    append_image images/recovery.scr $SZ_512K  # at 0x80188000
+    append_image images/recovery.scr $SZ_512K  # at 0x80980000
   else
-    append_image images/boot.scr $SZ_512K    # at 0x80188000
+    append_image images/boot.scr $SZ_512K    # at 0x80980000
   fi
 
-  append_image images/dtb $SZ_2M             # at 0x80208000
-  append_image images/zimage $SZ_8M          # at 0x80408000
-  append_image images/initramfs $SZ_20M      # at 0x80c08000
+  append_image images/dtb $SZ_2M             # at 0x80a00000
+  append_image images/zimage $SZ_8M          # at 0x80c00000
+  append_image images/initramfs $SZ_20M      # at 0x81400000
 }
 
 update_scripts() {

@@ -37,7 +37,7 @@ static unsigned MSG = 0xaabbccdd;
 struct usb usb;
 
 /* download u-boot.bin and optional other components */
-#define DOWNLOAD_ADDR 0x80008000
+#define DOWNLOAD_ADDR 0x80800000
 #define OMAP34XX_ID_L4_IO_BASE	0x4830A200
 #define OMAP34XX_ID_FIRST	(OMAP34XX_ID_L4_IO_BASE + 0x18)
 #define OMAP34XX_ID_LAST	(OMAP34XX_ID_FIRST + 0xc)
