@@ -53,7 +53,7 @@ echo "${nonroot}:${config_password}" | chpasswd
 # allow users in the wheel group to run sudo
 sed 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' -i /etc/sudoers
 
-sed -e 's/#HandlePowerKey=poweroff/HandlePowerKey=ignore/' -i /etc/systemd/logind.conf
+sed -e 's/#HandlePowerKey=poweroff/HandlePowerKey=suspend/' -i /etc/systemd/logind.conf
 
 ##### User 'self' chaanges
 
