@@ -76,4 +76,4 @@ GOPATH=/home/${nonroot}/gopath go get github.com/networkimprov/info-anvl
 mkdir /home/${nonroot}/share
 
 # fix permissions by setting the owner and group owner as self:self
-chown -R self:self /home/${nonroot}/gopath /home/${nonroot}/.bashrc /home/${nonroot}/share
+chown -R "${nonroot}:${nonroot}" "/home/${nonroot}"
