@@ -26,19 +26,19 @@ netctl enable ethernet-usb
 
 systemctl enable sshd
 
-systemctl enable omap-idle
-
 systemctl enable chrony
 
 # enable samba
-systemctl enable samba
+systemctl enable smbd
 systemctl enable nmbd
-systemctl enable smbd.socket
 
 systemctl enable watchdog
 
 systemctl enable anvl-getty
 systemctl enable anvl-usb
+systemctl enable omap-idle
+
+systemctl enable fstrim.timer
 
 # change root password
 echo "root:${config_password}" | chpasswd
@@ -52,6 +52,10 @@ echo "${nonroot}:${config_password}" | chpasswd
 
 # allow users in the wheel group to run sudo
 sed 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' -i /etc/sudoers
+
+sed -e 's/#HandlePowerKey=poweroff/HandlePowerKey=suspend/' -i /etc/systemd/logind.conf
+
+##### User 'self' chaanges
 
 # setup go workspace
 mkdir /home/${nonroot}/gopath
@@ -68,3 +72,8 @@ add_path "$HOME/gopath/bin"
 EOF
 
 GOPATH=/home/${nonroot}/gopath go get github.com/networkimprov/info-anvl
+
+mkdir /home/${nonroot}/share
+
+# fix permissions by setting the owner and group owner as self:self
+chown -R "${nonroot}:${nonroot}" "/home/${nonroot}"

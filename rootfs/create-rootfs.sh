@@ -64,9 +64,10 @@ cp /var/cache/pacman/pkg/* "${ROOTFS}/var/cache/pacman/pkg"
 pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" base wpa_supplicant openssh \
   sqlite samba graphicsmagick xdelta3 xapian-core chrony base-devel \
   traceroute dialog sudo \
-  omap-idle pacmatic alsa-utils udhcp \
+  pacmatic alsa-utils udhcp \
   go git mercurial \
-  sd8787_uapsta-fw linux-anvl watchdog anvl-usb
+  sd8787_uapsta-fw linux-anvl watchdog anvl-util bash-completion \
+  vim htop tmux
 
 # override standard pacman with pacman.conf modified for our repository
 cp "${DIR}/pacman.conf" "${ROOTFS}/etc/"
@@ -77,6 +78,8 @@ cp "${DIR}/ethernet-usb" "${ROOTFS}/etc/netctl/"
 
 # install alsa sound state
 cp "${DIR}/asound.state" "${ROOTFS}/var/lib/alsa/"
+
+cp "${DIR}/smb.conf" "${ROOTFS}/etc/samba/"
 
 # install config for udhcp
 cp "${DIR}/udhcpd.conf" "${ROOTFS}/etc/"
