@@ -29,12 +29,13 @@ echo "Starting init script with cmdline options: $@"
 #
 # Move modules to the right place
 #
-if [ -d /lib/modules/drivers ]; then
-	mkdir /lib/modules/$(uname -r)
-	mv /lib/modules/net /lib/modules/$(uname -r)/
-	mv /lib/modules/drivers /lib/modules/$(uname -r)/
+if [ -d /lib/modules/kernel ]; then
+	mkdir -p /lib/modules/$(uname -r)/kernel
+	mv /lib/modules/kernel/modules.* /lib/modules/$(uname -r)/
+	mv /lib/modules/kernel/* /lib/modules/$(uname -r)/kernel/
+	rmdir /lib/modules/kernel
+	depmod -a
 fi
-depmod -a
 
 #
 # Function for initializing USB composite gadget
@@ -49,7 +50,25 @@ start_usb() {
 
 	echo "Starting USB gadgets..."
 
-	#modprobe libcomposite
+	modprobe bq24190_charger
+	modprobe bq27x00_battery
+	modprobe led-class
+	modprobe ledtrig-default-on
+	modprobe ledtrig-gpio
+	modprobe ledtrig-heartbeat
+	modprobe leds-pca963x
+	modprobe phy-twl4030-usb
+	modprobe usbcore
+	modprobe musb_hdrc
+	modprobe omap2430
+	modprobe libcomposite
+	modprobe u_serial
+	modprobe usb_f_serial
+	modprobe usb_f_mass_storage
+	modprobe u_ether
+	modprobe usb_f_acm
+	modprobe usb_f_ecm
+	modprobe usb_f_rndis
 
 	mount -t configfs none /sys/kernel/config
 	mkdir /sys/kernel/config/usb_gadget/g1
@@ -223,6 +242,9 @@ elif echo $@ | grep recovery_install > /dev/null 2>&1; then
 
 		echo "Installing initramfs kernel modules to rootfs..."
 		tar c /lib/modules | tar x -C /mnt/
+
+		echo "Running depmod for kernel modules on rootfs..."
+		busybox chroot /mnt depmod -a
 
 		echo "Installing initramfs firmware to rootfs..."
 		tar c /lib/firmware | tar x -C /mnt/
