@@ -164,6 +164,7 @@ int usb_boot(usb_handle *usb,
 			fprintf(stderr,"unexpected 2ndstage response\n");
 			return -1;
 		}
+		sleep(1);
 		msg_size = sz2;
 		fprintf(stderr,"sending image to target...\n");
 		count = usb_write(usb, &msg_size, sizeof(msg_size));

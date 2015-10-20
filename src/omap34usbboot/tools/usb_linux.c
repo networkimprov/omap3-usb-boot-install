@@ -308,13 +308,13 @@ int usb_write(usb_handle *h, const void *_data, int len)
         bulk.len = xfer;
         bulk.data = data;
         bulk.timeout = 0;
-        
         n = ioctl(h->desc, USBDEVFS_BULK, &bulk);
         if(n != xfer) {
-            DBG("ERROR: n = %d, errno = %d (%s)\n",
-                n, errno, strerror(errno));
+            fprintf(stderr, "ERROR: n = %d, errno = %d (%s) %u/%u\n",
+                n, errno, strerror(errno), xfer, len);
             return -1;
         }
+	usleep(10);
 
         count += xfer;
         len -= xfer;
