@@ -21,7 +21,7 @@ echo Resetting install script header in memory
 mw 80980000 0 8
 
 echo Loading kernel, DTB and initramfs
-setenv bootargs root=/dev/ram0 console=ttyO2,115200 really_install omap_dieid=${dieid#} debug earlyprintk
+setenv bootargs root=/dev/ram0 rw console=ttyO2,115200 really_install omap_dieid=${dieid#} debug earlyprintk
 setenv fdt_high 8c000000
 setenv initrd_high ffffffff
 fdt addr 80a00000

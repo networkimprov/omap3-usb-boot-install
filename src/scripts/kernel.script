@@ -1,5 +1,5 @@
 echo Booting kernel with DTB and initramfs
-setenv bootargs root=/dev/ram0 console=ttyO2,115200 earlyprintk
+setenv bootargs root=/dev/ram0 rw console=ttyO2,115200 omap_dieid=${dieid#} earlyprintk
 setenv fdt_high 8c000000
 setenv initrd_high ffffffff
 fdt addr 80a00000

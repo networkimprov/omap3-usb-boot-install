@@ -34,8 +34,8 @@ systemctl enable nmbd
 
 systemctl enable watchdog
 
-systemctl enable anvl-getty
-systemctl enable anvl-usb
+#systemctl enable anvl-getty
+#systemctl enable anvl-usb
 systemctl enable omap-idle
 
 systemctl enable fstrim.timer

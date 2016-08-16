@@ -11,7 +11,7 @@ die() {
 
 usage() {
   cat <<EOF
-usage: ${0##*/} [option]
+usage: ${0##*/} [option] rootfs-directory
 
   Options:
     -p password    Set the password.
@@ -51,14 +51,26 @@ if [[ ${UID} -ne 0 ]]; then
     exit 1
 fi
 
+if [ ! "${!OPTIND}" ]; then
+    echo "Indicate rootfs directory"
+    exit 1
+fi
+
+pacman -S --needed --noconfirm arch-install-scripts > /dev/null 2>&1
+
 # get the absolute path to the script
 DIR="$(dirname "$(realpath "${0}")")"
-ROOTFS="/var/tmp/rootfs"
+ROOTFS="${!OPTIND}"
 
-rm -rf "${ROOTFS}"
+if [ -d "${ROOTFS}" ]; then
+    echo "Removing existing ${ROOTFS}"
+    rm -rf "${ROOTFS}"
+fi
+
 mkdir "${ROOTFS}"
-
 mkdir -p "${ROOTFS}/var/cache/pacman/pkg"
+
+echo "Copying package cache"
 cp /var/cache/pacman/pkg/* "${ROOTFS}/var/cache/pacman/pkg"
 
 pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" base wpa_supplicant openssh \
@@ -94,15 +106,15 @@ cp "${DIR}/wifi-p2p_init.sh" "${ROOTFS}/usr/bin/"
 cp "${DIR}/watchdog.conf" "${ROOTFS}/etc/"
 
 cp "${DIR}/configure-rootfs.sh" "${ROOTFS}/"
-arch-chroot "${ROOTFS}" /configure-rootfs.sh -p "${config_password}" -H "${config_hostname}"
+arch-chroot "${ROOTFS}" /configure-rootfs.sh -p "${config_password}" -H "${config_hostname}" 
 rm "${ROOTFS}/configure-rootfs.sh"
 
-# clean up package cache
-cp "${ROOTFS}/var/cache/pacman/pkg/"* /var/cache/pacman/pkg/
+echo "Clearing package cache..."
+mv -n "${ROOTFS}/var/cache/pacman/pkg/"* /var/cache/pacman/pkg/
 rm "${ROOTFS}/var/cache/pacman/pkg/"*
 
-pushd "${ROOTFS}"
-tar cf "${DIR}/rootfs-$(date +%Y-%m-%d-%H-%M).tar" ./*
-popd
+#echo "Tar'ing ${ROOTFS}"
+#( cd "${ROOTFS}" && tar cf "${DIR}/anvl-rootfs.tar" ./* )
 
-rm -rf "${ROOTFS}"
+"${DIR}/initramfs/create-initramfs.sh" "${ROOTFS}"
+
