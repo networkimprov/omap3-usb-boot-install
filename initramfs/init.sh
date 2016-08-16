@@ -78,9 +78,7 @@ start_usb() {
 
 	mkdir functions/acm.0
 	mkdir functions/ecm.0
-	mkdir functions/rndis.0
 
-	ln -s functions/rndis.0 configs/c.1
 	ln -s functions/acm.0 configs/c.1
 	ln -s functions/mass_storage.0 configs/c.1
 
