@@ -4,4 +4,4 @@ setenv fdt_high 8c000000
 setenv initrd_high ffffffff
 fdt addr 80a00000
 fdt resize
-bootz 80c00000 81400000:1400000 80a00000
+bootz 80c00000 81600000:1400000 80a00000
