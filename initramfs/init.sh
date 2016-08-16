@@ -112,12 +112,13 @@ start_usb() {
 #
 # Try not to touch the external MMC card
 #
-if ls /dev/mmcblk1 > /dev/null 2>&1; then
-	emmc=/dev/mmcblk1
-	rootfs=/dev/mmcblk1p2
-else
+if ! ls /dev/mmcblk1 > /dev/null 2>&1; then
+	echo "Older kernel? Assuming emmc is mmcblk0.."
 	emmc=/dev/mmcblk0
 	rootfs=/dev/mmcblk0p2
+else
+	emmc=/dev/mmcblk1
+	rootfs=/dev/mmcblk1p2
 fi
 
 #
