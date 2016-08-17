@@ -38,8 +38,9 @@ start_usb() {
 
 	echo "Starting USB gadgets..."
 
-	modprobe -ab usb_f_rndis usb_f_mass_storage usb_f_ecm usb_f_acm \
-	   musb_hdrc phy_twl4030_usb omap2430
+	modprobe phy_twl4030_usb
+	modprobe omap2430
+	modprobe -ab usb_f_mass_storage usb_f_acm usb_f_ecm usb_f_rndis
 	sleep 1
 
 	old_pwd=$(pwd)
