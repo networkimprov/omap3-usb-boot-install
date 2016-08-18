@@ -1,6 +1,22 @@
-Script to generate an install image and flash it over USB.
 
-The install steps are roughly:
+Scripts to generate install images and flash Anvl over USB
+
+
+Dependencies
+  qemu for qemu-system-arm
+  uboot-tools for mkimage
+
+Build images/* binaries
+  $ git checkout makeimg
+  $ ./makeimg.sh rootfs | initramfs | scripts
+  first build of rootfs downloads a lot of stuff
+
+Install binaries on Anvl via USB
+  $ ./omap-usb-install -i<images/anvl-rootfs-yyyymmdd:hhmm.tar.gz>|initramfs
+  connect USB to Anvl after prompt
+
+
+The omap-usb-install steps are roughly:
 
 1. Create a single install image of u-boot, kernel and initramfs
 
@@ -18,4 +34,3 @@ The install steps are roughly:
 
 Note that the NAND partitions must match with u-boot and kernel
 .dts file.
-
