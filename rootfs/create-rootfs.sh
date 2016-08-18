@@ -67,11 +67,11 @@ if [ -d "${ROOTFS}" ]; then
     rm -rf "${ROOTFS}"
 fi
 
-mkdir "${ROOTFS}"
-mkdir -p "${ROOTFS}/var/cache/pacman/pkg"
+mkdir -p "${ROOTFS}/var/cache/"{man,pacman/pkg}
 
-echo "Copying package cache"
-cp /var/cache/pacman/pkg/* "${ROOTFS}/var/cache/pacman/pkg"
+echo "Copying cache"
+ln /var/cache/pacman/pkg/* "${ROOTFS}/var/cache/pacman/pkg/"
+ln /var/cache/man/{CACHEDIR.TAG,index.db} "${ROOTFS}/var/cache/man/"
 
 pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" base wpa_supplicant openssh \
   sqlite samba graphicsmagick xdelta3 xapian-core chrony base-devel \
@@ -109,9 +109,9 @@ cp "${DIR}/configure-rootfs.sh" "${ROOTFS}/"
 arch-chroot "${ROOTFS}" /configure-rootfs.sh -p "${config_password}" -H "${config_hostname}" 
 rm "${ROOTFS}/configure-rootfs.sh"
 
-echo "Clearing package cache..."
-mv -n "${ROOTFS}/var/cache/pacman/pkg/"* /var/cache/pacman/pkg/
-rm "${ROOTFS}/var/cache/pacman/pkg/"*
+echo "Clearing cache..."
+rm /var/cache/pacman/pkg/*
+mv "${ROOTFS}/var/cache/pacman/pkg/"* /var/cache/pacman/pkg/
 
 #echo "Tar'ing ${ROOTFS}"
 #( cd "${ROOTFS}" && tar cf "${DIR}/anvl-rootfs.tar" ./* )
