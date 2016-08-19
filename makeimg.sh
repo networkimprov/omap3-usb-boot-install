@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 
 set -e
 
@@ -39,7 +39,7 @@ if [ ! -f ${ROOTFS} ]; then
   echo "Creating virtual disk..."
 
   qemu-img create ${ROOTFS}.tmp 4G
-  mkfs.ext4 -q ${ROOTFS}.tmp
+  /sbin/mkfs.ext4 -q ${ROOTFS}.tmp
   sudo mount ${ROOTFS}.tmp ${MOUNT}
 
   # download rootfs from installation instructions
@@ -67,7 +67,8 @@ After=multi-user.target
 Type=oneshot
 StandardOutput=tty
 WorkingDirectory=/root/rootfs
-ExecStart=/usr/bin/sleep 5
+ExecStart=/bin/bash -c 'while ! ip link show eth0 | grep -q "state UP"; do sleep 2; done'
+ExecStart=/usr/bin/echo STARTING ${OP}
 ExecStart=/usr/bin/pacman -Syu --noconfirm
 ExecStart=/root/rootfs/${OP} ./fs
 ExecStart=/usr/bin/echo ${OP} DONE
