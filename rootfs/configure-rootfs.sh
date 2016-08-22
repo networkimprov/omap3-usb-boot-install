@@ -44,17 +44,21 @@ echo "root:${config_password}" | chpasswd
 
 # change the hostname
 echo "${config_hostname}" > /etc/hostname
-sed -i "s/^127.0.0.1.*/& ${config_hostname}/" /etc/hosts
-
-useradd -m -G wheel -s /bin/bash ${nonroot}
-echo "${nonroot}:${config_password}" | chpasswd
+sed "s/^127.0.0.1.*/& ${config_hostname}/" -i /etc/hosts
 
 # allow users in the wheel group to run sudo
 sed 's/# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' -i /etc/sudoers
 
-sed -e 's/#HandlePowerKey=poweroff/HandlePowerKey=suspend/' -i /etc/systemd/logind.conf
+sed 's/#HandlePowerKey=poweroff/HandlePowerKey=suspend/' -i /etc/systemd/logind.conf
+
+# enable US locale
+sed 's/^#en_US.UTF-8/en_US.UTF-8/' -i /etc/locale.gen
+locale-gen
 
 ##### User 'self' chaanges
+
+useradd -m -G wheel -s /bin/bash ${nonroot}
+echo "${nonroot}:${config_password}" | chpasswd
 
 # setup go workspace
 mkdir /home/${nonroot}/gopath

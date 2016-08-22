@@ -80,7 +80,8 @@ pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" base wpa_supplicant openssh \
   wpa_actiond \
   go git mercurial \
   sd8787_uapsta-fw linux-anvl watchdog anvl-util bash-completion \
-  vim htop tmux
+  iw net-tools \
+  vim htop tmux mosh
 
 # override standard pacman with pacman.conf modified for our repository
 cp "${DIR}/pacman.conf" "${ROOTFS}/etc/"
@@ -101,6 +102,8 @@ cp "${DIR}/wifi-p2p_init.sh" "${ROOTFS}/usr/bin/"
 
 # overwrite default watchdog config
 cp "${DIR}/watchdog.conf" "${ROOTFS}/etc/"
+
+cp "${DIR}/locale.conf" "${ROOTFS}/etc/"
 
 cp "${DIR}/configure-rootfs.sh" "${ROOTFS}/"
 arch-chroot "${ROOTFS}" /configure-rootfs.sh -p "${config_password}" -H "${config_hostname}" 
