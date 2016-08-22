@@ -22,8 +22,6 @@ done
 
 nonroot=self
 
-netctl enable ethernet-usb
-
 systemctl enable sshd
 
 systemctl enable chrony
@@ -34,8 +32,9 @@ systemctl enable nmbd
 
 systemctl enable watchdog
 
+systemctl enable netctl-auto@mlan0
+
 #systemctl enable anvl-getty
-#systemctl enable anvl-usb
 systemctl enable omap-idle
 
 systemctl enable fstrim.timer

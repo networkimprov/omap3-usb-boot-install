@@ -77,16 +77,13 @@ pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" base wpa_supplicant openssh \
   sqlite samba graphicsmagick xdelta3 xapian-core chrony base-devel \
   traceroute dialog sudo \
   pacmatic alsa-utils udhcp \
+  wpa_actiond \
   go git mercurial \
   sd8787_uapsta-fw linux-anvl watchdog anvl-util bash-completion \
   vim htop tmux
 
 # override standard pacman with pacman.conf modified for our repository
 cp "${DIR}/pacman.conf" "${ROOTFS}/etc/"
-
-# install default configuration for netctl
-# ethernet over usb
-cp "${DIR}/ethernet-usb" "${ROOTFS}/etc/netctl/"
 
 # install alsa sound state
 cp "${DIR}/asound.state" "${ROOTFS}/var/lib/alsa/"
