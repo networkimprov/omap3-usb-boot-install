@@ -376,7 +376,7 @@ install_on_emmc() {
     if ! sudo mkfs.vfat -F 32 $(readlink -f $emmc-part1) > /dev/null; then
       error_exit "ERROR: Could not mkfs.vfat"
     fi
-    if ! sudo mkfs.ext4 -q $(readlink -f $emmc-part2); then
+    if ! sudo mkfs.ext4 -O ^64bit -q $(readlink -f $emmc-part2); then
       error_exit "ERROR: Could not mkfs.ext4"
     fi
   fi
