@@ -34,6 +34,8 @@ systemctl enable watchdog
 
 systemctl enable netctl-auto@mlan0
 
+systemctl enable mwifiex-p2p_wpa
+
 #systemctl enable anvl-getty
 systemctl enable omap-idle
 

@@ -76,8 +76,8 @@ ln /var/cache/man/{CACHEDIR.TAG,index.db} "${ROOTFS}/var/cache/man/"
 pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" base wpa_supplicant openssh \
   sqlite samba graphicsmagick xdelta3 xapian-core chrony base-devel \
   traceroute dialog sudo \
-  pacmatic alsa-utils udhcp \
-  wpa_actiond \
+  pacmatic alsa-utils \
+  wpa_actiond mwifiex-p2p \
   go git mercurial \
   sd8787_uapsta-fw linux-anvl watchdog anvl-util bash-completion \
   iw net-tools \
@@ -90,15 +90,6 @@ cp "${DIR}/pacman.conf" "${ROOTFS}/etc/"
 cp "${DIR}/asound.state" "${ROOTFS}/var/lib/alsa/"
 
 cp "${DIR}/smb.conf" "${ROOTFS}/etc/samba/"
-
-# install config for udhcp
-cp "${DIR}/udhcpd.conf" "${ROOTFS}/etc/"
-
-cp "${DIR}/wpa_supplicant.conf" "${ROOTFS}/etc/netctl/"
-
-cp "${DIR}/enable_debug.sh" "${ROOTFS}/usr/bin/"
-
-cp "${DIR}/wifi-p2p_init.sh" "${ROOTFS}/usr/bin/"
 
 # overwrite default watchdog config
 cp "${DIR}/watchdog.conf" "${ROOTFS}/etc/"
