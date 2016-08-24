@@ -21,8 +21,10 @@ for file in ${SCR}/../src/scripts/*.script; do
   mkimage -A arm -T script -C none -n "$name script" -d $file ${SCR}/${name}.scr > /dev/null
   scripts="${scripts}${name}.scr "
 done
+mkenvimage -s 0x4000 -o ${SCR}/uboot.env ${SCR}/../src/scripts/uEnv.txt
+scripts="${scripts}uboot.env "
 mkimage -A arm -T firmware -O u-boot -C none -a 0x80800000 -e 0x00000000 \
-  -n 'U-Boot 2014.10-00004-g8fcd259 fo' -d ${SCR}/u-boot.bin ${SCR}/u-boot.img > /dev/null
+  -n 'U-Boot 2016.07-00003-gc5792a7 fo' -d ${SCR}/u-boot.bin ${SCR}/u-boot.img > /dev/null
 scripts="${scripts}u-boot.img"
 
 if [ "$1" = scripts ]; then

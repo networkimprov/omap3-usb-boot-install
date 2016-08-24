@@ -398,7 +398,7 @@ install_on_emmc() {
   echo "Mounted ext4 to temporary location $ext4"
 
   echo "Populating VFAT partition with u-boot, kernel and initramfs..."
-  if ! sudo cp images/{MLO,u-boot.img,u-boot.bin,uEnv.txt,dtb,zimage,initramfs} $vfat/; then
+  if ! sudo cp images/{MLO,u-boot.img,u-boot.bin,uboot.env,dtb,zimage,initramfs} $vfat/; then
     error_exit "ERROR: Could not copy files to VFAT"
   fi
 

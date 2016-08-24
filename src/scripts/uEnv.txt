@@ -1,0 +1,69 @@
+fdtfile=dtb
+bootfile=zimage
+ramdisk=initramfs
+fdtaddr=80a00000
+loadaddr=80c00000
+rdaddr=81600000
+fdt_high=8c000000
+initrd_high=ffffffff
+bootpart=1:1
+console=console=ttyO2,115200n8
+mpurate=mpurate=800
+optargs=
+mmcroot=root=/dev/mmcblk1p2 rw
+mmcfstype=rootfstype=ext4 rootwait
+nandroot=root=ubi0:rootfs ubi.mtd=7,512
+nandfstype=rootfstype=ubifs rootwait
+mmcargs=setenv  bootargs ${console} ${optargs} ${mpurate} ${mmcroot}  ${mmcfstype}
+nandargs=setenv bootargs ${console} ${optargs} ${mpurate} ${nandroot} ${nandfstype}
+mmcdev=1
+bootenv=uEnv.txt
+loadbootenv=fatload mmc ${mmcdev} ${loadaddr} ${bootenv}
+importbootenv=echo Importing environment from mmc ...; \
+	env import -t $loadaddr $filesize
+loadramdisk=fatload mmc ${mmcdev} ${rdaddr} ${ramdisk}
+loadzimage=fatload mmc ${mmcdev} ${loadaddr} zImage
+loadfdt=fatload mmc ${mmcdev} ${fdtaddr} ${fdtfile}
+distro_fdt=ext4load mmc ${mmcdev}:2 ${fdtaddr} /boot/dtbs/anvl.dtb
+distro_kernel=ext4load mmc ${mmcdev}:2 ${loadaddr} /boot/vmlinuz-linux-anvl
+distro_initramfs=ext4load mmc ${mmcdev}:2 ${rdaddr} /boot/initramfs-linux-anvl.img
+distroboot=echo Booting distro kernel from mmc...; \
+	run mmcargs; \
+	run distro_kernel; \
+	if run distro_initramfs; then \
+		bootz ${loadaddr} ${rdaddr}:${filesize} ${fdtaddr}; \
+	else \
+		bootz ${loadaddr} - ${fdtaddr}; \
+	fi
+mmcboot=echo Booting from mmc ...; \
+	run mmcargs; \
+	run loadfdt; \
+	run loadramdisk; \
+	bootz ${loadaddr} ${rdaddr}:${filesize} ${fdtaddr}
+nandboot=echo Booting from nand ...; \
+	run nandargs; \
+	nandecc sw; \
+	nand read ${loadaddr} 580000 800000; \
+	fdt addr ${fdtaddr}; \
+	nand read ${fdtaddr}  380000 200000; \
+	fdt resize; \
+	nand read ${rdaddr} d80000 1400000; \
+	bootz ${loadaddr} ${rdaddr}:1400000 ${fdtaddr}
+preboot=echo Checking for install script; \
+	if source 80980000; then \
+		echo Install done; \
+	else \
+		echo No install script found; \
+	fi
+bootcmd=mmc dev ${mmcdev}; \
+	if mmc rescan; then \
+		if run distro_fdt; then \
+			run distroboot; \
+		elif run loadzimage; then \
+			run mmcboot; \
+		else \
+			run nandboot; \
+		fi; \
+	else \
+		run nandboot; \
+	fi
