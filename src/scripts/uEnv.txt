@@ -7,20 +7,16 @@ rdaddr=81600000
 fdt_high=8c000000
 initrd_high=ffffffff
 bootpart=1:1
-console=console=ttyO2,115200n8
-mpurate=mpurate=800
 optargs=
-mmcroot=root=/dev/mmcblk1p2 rw
-mmcfstype=rootfstype=ext4 rootwait
-nandroot=root=ubi0:rootfs ubi.mtd=7,512
-nandfstype=rootfstype=ubifs rootwait
-mmcargs=setenv  bootargs ${console} ${optargs} ${mpurate} ${mmcroot}  ${mmcfstype}
-nandargs=setenv bootargs ${console} ${optargs} ${mpurate} ${nandroot} ${nandfstype}
+bootargs=console=ttyO2,115200n8 mpurate=800 ${optargs}
+mmcargs=setenv    bootargs ${bootargs} root=/dev/ram0 rw
+distroargs=setenv bootargs ${bootargs} root=/dev/mmcblk1p2 rw rootfstype=ext4 rootwait
+nandargs=setenv   bootargs ${bootargs} root=ubi0:rootfs ubi.mtd=7,512 rootfstype=ubifs rootwait
 mmcdev=1
-bootenv=uEnv.txt
-loadbootenv=fatload mmc ${mmcdev} ${loadaddr} ${bootenv}
-importbootenv=echo Importing environment from mmc ...; \
-	env import -t $loadaddr $filesize
+# bootenv=uEnv.txt
+# loadbootenv=fatload mmc ${mmcdev} ${loadaddr} ${bootenv}
+# importbootenv=echo Importing environment from mmc ...; \
+# 	env import -t $loadaddr $filesize
 loadramdisk=fatload mmc ${mmcdev} ${rdaddr} ${ramdisk}
 loadzimage=fatload mmc ${mmcdev} ${loadaddr} zImage
 loadfdt=fatload mmc ${mmcdev} ${fdtaddr} ${fdtfile}
@@ -28,7 +24,7 @@ distro_fdt=ext4load mmc ${mmcdev}:2 ${fdtaddr} /boot/dtbs/anvl.dtb
 distro_kernel=ext4load mmc ${mmcdev}:2 ${loadaddr} /boot/vmlinuz-linux-anvl
 distro_initramfs=ext4load mmc ${mmcdev}:2 ${rdaddr} /boot/initramfs-linux-anvl.img
 distroboot=echo Booting distro kernel from mmc...; \
-	run mmcargs; \
+	run distroargs; \
 	run distro_kernel; \
 	if run distro_initramfs; then \
 		bootz ${loadaddr} ${rdaddr}:${filesize} ${fdtaddr}; \
