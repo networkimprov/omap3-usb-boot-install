@@ -36,10 +36,13 @@ systemctl enable netctl-auto@mlan0
 
 systemctl enable mwifiex-p2p_wpa
 
+systemctl enable anvl-gadget
 #systemctl enable anvl-getty
 systemctl enable omap-idle
 
-systemctl enable fstrim.timer
+echo "Disabling default timers:"
+ls /usr/lib/systemd/system/*.target.wants/*.timer
+rm /usr/lib/systemd/system/*.target.wants/*.timer
 
 # change root password
 echo "root:${config_password}" | chpasswd
