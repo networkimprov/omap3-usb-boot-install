@@ -15,22 +15,41 @@ Install binaries on Anvl via USB
   $ ./omap-usb-install -i<images/anvl-rootfs-yyyymmdd:hhmm.tar.gz>|initramfs
   connect USB to Anvl after prompt
 
+To recover a bricked board or test new kernel/modules
+  $ omap-usb-install -iinitramfs # writes just the vfat partition
+  $ mount /dev/disk/by-id/usb-Linux_Files-Stor_Gadget_*part2 <PC-dir>
+  or use anvl console (do NOT mount in both places at once!)
+  # mount /dev/mmcblk1p2 /new_root
+
+What's installed
+
+  eMMC vfat partition:
+    MLO, u-boot.{bin,img}, uboot.env; fallback zimage, dtb, initramfs
+    u-boot environment in src/scripts/uEnv.txt
+    initramfs config in rootfs/initramfs/
+
+  eMMC ext4 partition:
+    Arch Linux ARM rootfs
+    rootfs-installed modules also saved in /lib/modules/factory/
+    assembled with rootfs/{create,configure}-rootfs.sh
+    anvl-specific package sources:
+      $ git clone https://github.com/networkimprov/arch-packages.git
+
+  NAND device is not present in EVT1 and later anvls
+
 
 The omap-usb-install steps are roughly:
 
-1. Create a single install image of u-boot, kernel and initramfs
+  1. Create a single install image of u-boot, kernel and initramfs
 
-2. Load the install image over USB
+  2. Load the install image over USB
 
-3. Start u-boot and flash u-boot, kernel and initramfs
+  3. Start u-boot and flash u-boot, kernel and initramfs (NAND only?)
 
-4. Start kernel and configure USB composite gadget in serial,
-   Ethernet and mass storage mode with eMMC as the mass storage
-   back end. The serial console shows up as /dev/ttyACM0 on the
-   host PC.
+  4. Boot into initramfs and configure USB composite gadget in serial,
+     Ethernet and mass storage mode with eMMC as the mass storage
+     back end. The serial console shows up as /dev/ttyACM0 on the host PC.
 
-5. Once the red and green LEDs start cycling, the eMMC can be
-   formatted an initialized over USB mass storage from the host PC.
+  5. Format and load eMMC over USB mass storage from the host PC.
 
-Note that the NAND partitions must match with u-boot and kernel
-.dts file.
+  Note that the NAND partitions must match with u-boot and kernel .dts file.
