@@ -21,13 +21,23 @@ Build images/* binaries
 
 Install binaries on Anvl via USB
   $ ./omap-usb-install -i<images/anvl-rootfs-yyyymmdd:hhmm.tar.gz>|initramfs
-  connect USB to Anvl after prompt
+  connect anvl to USB charging port after prompt
+
+Login on Anvl
+  via usb ethernet
+  $ sudo ifconfig usb0 192.168.99.1/30 up
+  $ ssh self@192.168.99.2 # root password
+  via console: root, pocketanvl
+  # wifi-menu mlan0 # connect to your access point, automatic after first time
+  # ip addr show mlan0 # get address for use with ssh
+  $ ssh self@<mlan0-ip> # root password
 
 To recover a bricked board or test new kernel/modules
   $ ./omap-usb-install -iinitramfs # writes just the vfat partition
-  $ mount /dev/disk/by-id/usb-Linux_Files-Stor_Gadget_*part2 <PC-dir>
+  $ sudo mount /dev/disk/by-id/usb-Linux_Files-Stor_Gadget_*part2 <PC-dir>
   or use anvl console (do NOT mount in both places at once!)
   # mount /dev/mmcblk1p2 /new_root
+
 
 What's installed
 
@@ -59,17 +69,12 @@ What's installed
 
 
 The omap-usb-install steps are roughly:
-
   1. Create a single install image of u-boot, kernel and initramfs
-
   2. Load the install image over USB
-
   3. Start u-boot and flash u-boot, kernel and initramfs (NAND only?)
-
   4. Boot into initramfs and configure USB composite gadget in serial,
      Ethernet and mass storage mode with eMMC as the mass storage
      back end. The serial console shows up as /dev/ttyACM0 on the host PC.
-
   5. Format and load eMMC over USB mass storage from the host PC.
 
   Note that the NAND partitions must match with u-boot and kernel .dts file.
