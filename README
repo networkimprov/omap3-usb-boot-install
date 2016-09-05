@@ -2,6 +2,14 @@
 Scripts to generate install images and flash Anvl over USB
 
 
+Equipment
+  USB UART cable FTDIchip TTL-232R-5V
+    https://shop.clickandbuild.com/cnb/shop/ftdichip?productID=49&op=catalogue-product_info-null&prodCategoryID=296
+  USB charging port (available on externally powered hubs)
+    http://plugable.com/products/usb2-hub4bc
+  USB cable
+    https://www.amazon.com/gp/product/B00ENZDQ8G/
+
 Dependencies
   qemu for qemu-system-arm
   uboot-tools for mkimage
@@ -16,7 +24,7 @@ Install binaries on Anvl via USB
   connect USB to Anvl after prompt
 
 To recover a bricked board or test new kernel/modules
-  $ omap-usb-install -iinitramfs # writes just the vfat partition
+  $ ./omap-usb-install -iinitramfs # writes just the vfat partition
   $ mount /dev/disk/by-id/usb-Linux_Files-Stor_Gadget_*part2 <PC-dir>
   or use anvl console (do NOT mount in both places at once!)
   # mount /dev/mmcblk1p2 /new_root
@@ -25,17 +33,29 @@ What's installed
 
   eMMC vfat partition:
     MLO, u-boot.{bin,img}, uboot.env; fallback zimage, dtb, initramfs
-    u-boot environment in src/scripts/uEnv.txt
-    initramfs config in rootfs/initramfs/
+    u-boot environment in ./src/scripts/uEnv.txt
+    initramfs config in ./rootfs/initramfs/
 
   eMMC ext4 partition:
     Arch Linux ARM rootfs
-    rootfs-installed modules also saved in /lib/modules/factory/
-    assembled with rootfs/{create,configure}-rootfs.sh
-    anvl-specific package sources:
-      $ git clone https://github.com/networkimprov/arch-packages.git
+    assembled with ./rootfs/{create,configure}-rootfs.sh
+    includes kernel modules backup in /lib/modules/factory/
 
-  NAND device is not present in EVT1 and later anvls
+  NAND device: not present in EVT1 and later anvls
+
+  u-boot sources:
+    $ git clone https://github.com/networkimprov/u-boot.git
+    $ cd u-boot; git checkout anvl-v2016.07
+  kernel sources:
+    $ git clone https://github.com/networkimprov/linux.git
+    $ cd linux; git checkout anvl-v4.7
+  anvl-specific package sources:
+    $ git clone https://github.com/networkimprov/arch-packages.git
+    $ cd arch-packages/archlinux-anvl
+  Arch Linux packages
+    ARM catalog: https://archlinuxarm.org/packages
+    ARM sources: https://github.com/archlinuxarm/PKGBUILDs
+    upstream: https://www.archlinux.org/packages/
 
 
 The omap-usb-install steps are roughly:
