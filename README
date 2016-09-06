@@ -5,6 +5,8 @@ Scripts to generate install images and flash Anvl over USB
 Equipment
   USB UART cable FTDIchip TTL-232R-5V
     https://shop.clickandbuild.com/cnb/shop/ftdichip?productID=49&op=catalogue-product_info-null&prodCategoryID=296
+  USB current meter
+    https://www.amazon.com/DROK-Multimeter-Voltmeter-Capacitance-Charging/dp/B00J3JSEG6/
   USB charging port (available on externally powered hubs)
     http://plugable.com/products/usb2-hub4bc
   USB cable
@@ -35,7 +37,7 @@ Login on Anvl
 To recover a bricked board or test new kernel/modules
   $ ./omap-usb-install -iinitramfs # writes just the vfat partition
   $ sudo mount /dev/disk/by-id/usb-Linux_Files-Stor_Gadget_*part2 <PC-dir>
-  or use anvl console (do NOT mount in both places at once!)
+  or use initramfs console (do NOT mount in both places at once!)
   # mount /dev/mmcblk1p2 /new_root
 
 
