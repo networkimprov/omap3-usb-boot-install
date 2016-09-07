@@ -73,15 +73,7 @@ echo "Copying cache"
 ln /var/cache/pacman/pkg/* "${ROOTFS}/var/cache/pacman/pkg/"
 ln /var/cache/man/{CACHEDIR.TAG,index.db} "${ROOTFS}/var/cache/man/"
 
-pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" base wpa_supplicant openssh \
-  sqlite samba graphicsmagick xdelta3 xapian-core chrony base-devel \
-  traceroute dialog sudo \
-  pacmatic alsa-utils \
-  wpa_actiond mwifiex-p2p \
-  go git mercurial \
-  sd8787_uapsta-fw linux-anvl watchdog anvl-util bash-completion \
-  iw net-tools \
-  vim htop tmux mosh
+pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" $(sed s/#.*$// "${DIR}/packages.txt")
 
 # override standard pacman with pacman.conf modified for our repository
 cp "${DIR}/pacman.conf" "${ROOTFS}/etc/"

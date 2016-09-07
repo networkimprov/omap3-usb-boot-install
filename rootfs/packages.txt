@@ -1,0 +1,29 @@
+# this file is inserted as a list of arguments to pacstrap
+# todo: sort & comment each item
+
+base
+wpa_supplicant
+openssh
+samba
+graphicsmagick xdelta3 xapian-core sqlite
+chrony
+base-devel
+traceroute
+dialog
+sudo
+pacmatic
+alsa-utils
+wpa_actiond
+mwifiex-p2p
+go git mercurial
+sd8787_uapsta-fw
+linux-anvl
+watchdog
+anvl-util
+bash-completion
+iw
+net-tools
+vim
+htop
+tmux
+mosh
