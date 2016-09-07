@@ -26,13 +26,15 @@ Install binaries on Anvl via USB
   connect anvl to USB charging port after prompt
 
 Login on Anvl
+  via console: root, pocketanvl
+  # timedatectl set-time "2016-09-06 22:06:00" # give UTC value
+  # wifi-menu mlan0 # connect to your access point, automatic after first time
+  # ip addr show mlan0 # IP address for use with ssh
+  via wifi
+  $ ssh self@<mlan0-ip> # root password
   via usb ethernet
   $ sudo ifconfig usb0 192.168.99.1/30 up
   $ ssh self@192.168.99.2 # root password
-  via console: root, pocketanvl
-  # wifi-menu mlan0 # connect to your access point, automatic after first time
-  # ip addr show mlan0 # get address for use with ssh
-  $ ssh self@<mlan0-ip> # root password
 
 To recover a bricked board or test new kernel/modules
   $ ./omap-usb-install -iinitramfs # writes just the vfat partition
@@ -50,6 +52,7 @@ What's installed
 
   eMMC ext4 partition:
     Arch Linux ARM rootfs
+    package list in ./rootfs/packages.txt
     assembled with ./rootfs/{create,configure}-rootfs.sh
     includes kernel modules backup in /lib/modules/factory/
 
