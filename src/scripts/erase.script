@@ -4,9 +4,9 @@ if nand device 0; then
 fi
 
 echo Erasing eMMC
-mw 80c00000 0 1024
+mw 80c00000 0 400
 mmc dev 1
-mmc write 80200000 0 2
+mmc write 80c00000 0 2
 
 echo Resetting install script header in memory
 mw 80980000 0 8
