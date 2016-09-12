@@ -2,6 +2,7 @@ fdtfile=dtb
 bootfile=zimage
 ramdisk=initramfs
 fdtaddr=80a00000
+tmpaddr=80b00000
 loadaddr=80c00000
 rdaddr=81600000
 fdt_high=8c000000
@@ -16,6 +17,19 @@ mmcdev=1
 # loadbootenv=fatload mmc ${mmcdev} ${loadaddr} ${bootenv}
 # importbootenv=echo Importing environment from mmc ...; \
 # 	env import -t $loadaddr $filesize
+
+usb_state_check=i2c dev 1; i2c read 6b 8 1 ${tmpaddr}; \
+	setexpr.w usb_state *${tmpaddr} \\& c0; \
+	test ${usb_state} -eq 80;
+# hex e74 = dec 3700 = 3.7 volts
+min_voltage_threshold=e74
+battery_state_check=i2c dev 1; i2c read 6b 9 1 ${tmpaddr}; \
+	setexpr.w battery_state *${tmpaddr}; \
+	test ${battery_state} -eq 0;
+battery_voltage_check=i2c dev 1; i2c read 55 4 2 ${tmpaddr}; \
+	setexpr.w voltage *${tmpaddr}; \
+	test 0x${voltage} -gt 0x${min_voltage_threshold};
+
 loadramdisk=fatload mmc ${mmcdev} ${rdaddr} ${ramdisk}
 loadzimage=fatload mmc ${mmcdev} ${loadaddr} zImage
 loadfdt=fatload mmc ${mmcdev} ${fdtaddr} ${fdtfile}
