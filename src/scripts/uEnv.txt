@@ -21,8 +21,8 @@ mmcdev=1
 usb_state_check=i2c dev 1; i2c read 6b 8 1 ${tmpaddr}; \
 	setexpr.w usb_state *${tmpaddr} \\& c0; \
 	test ${usb_state} -eq 80;
-# hex e74 = dec 3700 = 3.7 volts
-min_voltage_threshold=e74
+# hex e10 = dec 3600 = 3.6 volts
+min_voltage_threshold=e10
 battery_state_check=i2c dev 1; i2c read 6b 9 1 ${tmpaddr}; \
 	setexpr.w battery_state *${tmpaddr}; \
 	test ${battery_state} -eq 0;
@@ -64,15 +64,19 @@ preboot=echo Checking for install script; \
 	else \
 		echo No install script found; \
 	fi
-bootcmd=mmc dev ${mmcdev}; \
-	if mmc rescan; then \
-		if run distro_fdt; then \
-			run distroboot; \
-		elif run loadzimage; then \
-			run mmcboot; \
+bootcmd=if run usb_state_check || run battery_voltage_check; then \
+		mmc dev ${mmcdev}; \
+		if mmc rescan; then \
+			if run distro_fdt; then \
+				run distroboot; \
+			elif run loadzimage; then \
+				run mmcboot; \
+			else \
+				run nandboot; \
+			fi; \
 		else \
 			run nandboot; \
 		fi; \
 	else \
-		run nandboot; \
-	fi
+		echo "No USB or battery too low to boot. Aborting." \
+	fi;
