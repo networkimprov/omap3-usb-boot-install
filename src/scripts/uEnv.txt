@@ -64,19 +64,23 @@ preboot=echo Checking for install script; \
 	else \
 		echo No install script found; \
 	fi
-bootcmd=if run usb_state_check || run battery_voltage_check; then \
-		mmc dev ${mmcdev}; \
-		if mmc rescan; then \
-			if run distro_fdt; then \
-				run distroboot; \
-			elif run loadzimage; then \
-				run mmcboot; \
+bootcmd=while true; do \
+		if run usb_state_check || run battery_voltage_check; then \
+			mmc dev ${mmcdev}; \
+			if mmc rescan; then \
+				if run distro_fdt; then \
+					run distroboot; \
+				elif run loadzimage; then \
+					run mmcboot; \
+				else \
+					run nandboot; \
+				fi; \
 			else \
 				run nandboot; \
 			fi; \
+			break; \
 		else \
-			run nandboot; \
+			echo "No USB or battery too low to boot. " \
 		fi; \
-	else \
-		echo "No USB or battery too low to boot. Aborting." \
-	fi;
+		sleep 5; \
+	done; \
