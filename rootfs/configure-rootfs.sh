@@ -34,15 +34,13 @@ systemctl enable watchdog
 
 systemctl enable netctl-auto@mlan0
 
-systemctl enable mwifiex-p2p_wpa
+systemctl enable mwifiex-p2p
 
 systemctl enable anvl-gadget
 #systemctl enable anvl-getty
 systemctl enable omap-idle
 
-echo "Disabling default timers:"
-ls /usr/lib/systemd/system/*.target.wants/*.timer
-rm /usr/lib/systemd/system/*.target.wants/*.timer
+systemctl enable info-anvl
 
 # change root password
 echo "root:${config_password}" | chpasswd

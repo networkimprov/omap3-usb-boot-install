@@ -20,6 +20,7 @@ sd8787_uapsta-fw
 linux-anvl
 watchdog
 anvl-util
+info-anvl
 bash-completion
 iw
 net-tools

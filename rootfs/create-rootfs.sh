@@ -71,7 +71,7 @@ mkdir -p "${ROOTFS}/var/cache/"{man,pacman/pkg}
 
 echo "Copying cache"
 ln /var/cache/pacman/pkg/* "${ROOTFS}/var/cache/pacman/pkg/"
-ln /var/cache/man/{CACHEDIR.TAG,index.db} "${ROOTFS}/var/cache/man/" || true
+#ln /var/cache/man/{CACHEDIR.TAG,index.db} "${ROOTFS}/var/cache/man/" || true
 
 pacstrap -C "${DIR}/pacman.conf" -d "${ROOTFS}" $(sed s/#.*$// "${DIR}/packages.txt")
 
