@@ -88,6 +88,8 @@ cp "${DIR}/watchdog.conf" "${ROOTFS}/etc/"
 
 cp "${DIR}/locale.conf" "${ROOTFS}/etc/"
 
+cp "${DIR}/logind.conf" "${ROOTFS}/etc/systemd/"
+
 cp "${DIR}/configure-rootfs.sh" "${ROOTFS}/"
 arch-chroot "${ROOTFS}" /configure-rootfs.sh -p "${config_password}" -H "${config_hostname}" 
 rm "${ROOTFS}/configure-rootfs.sh"
